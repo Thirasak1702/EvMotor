@@ -7,18 +7,32 @@ using EbikeRental.Infrastructure.Identity;
 using EbikeRental.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// Database
+// Database - Support both SQL Server and MySQL
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (databaseProvider == "MySQL")
+    {
+        var serverVersion = new MySqlServerVersion(new Version(8, 0, 21));
+        options.UseMySql(connectionString, serverVersion);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Identity
-builder.Services.AddIdentity<AppUser, AppRole>(options => 
+builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
