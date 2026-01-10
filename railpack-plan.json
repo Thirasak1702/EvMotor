@@ -1,0 +1,14 @@
+{
+  "name": "EbikeRental",
+  "steps": [
+    {
+      "name": "restore-and-publish",
+      "image": "mcr.microsoft.com/dotnet/sdk:9.0",
+      "command": "dotnet restore EbikeRental.sln && dotnet publish EbikeRental.Web/EbikeRental.Web.csproj -c Release -o ./publish"
+    }
+  ],
+  "deploy": {
+    "image": "mcr.microsoft.com/dotnet/aspnet:9.0",
+    "command": "dotnet ./publish/EbikeRental.Web.dll"
+  }
+}
