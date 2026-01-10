@@ -1,4 +1,4 @@
-using EbikeRental.Application.Interfaces;
+﻿using EbikeRental.Application.Interfaces;
 using EbikeRental.Application.Interfaces.Repositories;
 using EbikeRental.Application.Services;
 using EbikeRental.Domain.Entities;
@@ -112,20 +112,65 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-// Seed Data
+// Seed Data and Migration
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
     try
     {
+        logger.LogInformation("Starting database migration and seeding...");
+
         var context = services.GetRequiredService<AppDbContext>();
+
+        // Test connection
+        logger.LogInformation("Testing database connection...");
+        var canConnect = await context.Database.CanConnectAsync();
+        logger.LogInformation($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
+
+        if (!canConnect)
+        {
+            logger.LogError("Cannot connect to database. Please check connection string.");
+            throw new Exception("Database connection failed");
+        }
+
+        // Apply migrations
+        logger.LogInformation("Applying pending migrations...");
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        logger.LogInformation($"Pending migrations count: {pendingMigrations.Count()}");
+
+        if (pendingMigrations.Any())
+        {
+            foreach (var migration in pendingMigrations)
+            {
+                logger.LogInformation($"  - {migration}");
+            }
+        }
+
         context.Database.Migrate(); // Auto-migrate
+        logger.LogInformation("✅ Database migrations applied successfully!");
+
+        // Seed roles and admin
+        logger.LogInformation("Seeding roles and admin user...");
         await IdentitySeed.SeedRolesAndAdminAsync(services);
+        logger.LogInformation("✅ Database seeding completed successfully!");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "❌ CRITICAL ERROR during database migration/seeding:");
+        logger.LogError($"Error Type: {ex.GetType().Name}");
+        logger.LogError($"Error Message: {ex.Message}");
+        logger.LogError($"Stack Trace: {ex.StackTrace}");
+
+        if (ex.InnerException != null)
+        {
+            logger.LogError($"Inner Exception: {ex.InnerException.Message}");
+            logger.LogError($"Inner Stack Trace: {ex.InnerException.StackTrace}");
+        }
+
+        // Re-throw to prevent app from starting with broken database
+        throw;
     }
 }
 
