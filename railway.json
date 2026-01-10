@@ -1,0 +1,12 @@
+{
+  "build": {
+    "base": "dotnet",
+    "commands": [
+      "dotnet restore EbikeRental.sln",
+      "dotnet publish EbikeRental.Web/EbikeRental.Web.csproj -c Release -o ./publish"
+    ]
+  },
+  "deploy": {
+    "command": "dotnet publish/EbikeRental.Web.dll"
+  }
+}
