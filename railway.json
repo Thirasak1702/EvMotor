@@ -7,6 +7,6 @@
     ]
   },
   "deploy": {
-    "command": "dotnet publish/EbikeRental.Web.dll"
+    "command": "dotnet ./publish/EbikeRental.Web.dll"
   }
 }
