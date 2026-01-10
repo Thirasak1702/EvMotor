@@ -1,0 +1,261 @@
+﻿@page
+@model EbikeRental.Web.Pages.Production.ProductionOrders.IndexModel
+@{
+    ViewData["Title"] = "Production Orders";
+}
+
+<div class="py-4">
+    <div class="mb-4 flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Production Orders</h2>
+            <div class="text-sm text-gray-500">Production Orders &amp; Tracking</div>
+        </div>
+
+        <a href="/Production/ProductionOrders/Info" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            <i class="bi bi-plus-circle"></i>
+            New Production Order
+        </a>
+    </div>
+
+    @* Needed for fetch POST (Start/Complete) *@
+    <form method="post" class="hidden" id="anti-forgery-form">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <!-- Filters -->
+    <div class="mb-4 rounded-lg border border-gray-200 bg-white">
+        <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <div class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <i class="bi bi-funnel"></i>
+                Filters
+            </div>
+        </div>
+
+        <div class="p-4">
+            <form method="get" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Order Number</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" name="orderNumber" value="@Model.OrderNumber" placeholder="Search..." />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Item</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" name="item" value="@Model.Item" placeholder="Search..." />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" name="status">
+                            <option value="">All</option>
+                            <option value="Pending" selected="@(Model.Status == "Pending")">Pending</option>
+                            <option value="InProgress" selected="@(Model.Status == "InProgress")">In Progress</option>
+                            <option value="Completed" selected="@(Model.Status == "Completed")">Completed</option>
+                            <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                        <i class="bi bi-search"></i>
+                        Search
+                    </button>
+                    <a asp-page="Index" class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200">
+                        <i class="bi bi-x-circle"></i>
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="rounded-lg border border-gray-200 bg-white">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                        <th class="px-4 py-3">Order Number</th>
+                        <th class="px-4 py-3">Product</th>
+                        <th class="px-4 py-3">Quantity</th>
+                        <th class="px-4 py-3">Progress</th>
+                        <th class="px-4 py-3">Start Date</th>
+                        <th class="px-4 py-3">End Date</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200 bg-white">
+                    @if (Model.ProductionOrders.Any())
+                    {
+                        @foreach (var order in Model.ProductionOrders)
+                        {
+                            var progressClass = order.ProgressPercentage >= 100 ? "bg-green-600" : order.ProgressPercentage >= 50 ? "bg-blue-600" : "bg-yellow-500";
+
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 font-medium text-gray-900">@order.OrderNumber</td>
+
+                                <td class="px-4 py-3">
+                                    <div class="text-gray-900">@order.ItemName</div>
+                                    <div class="text-xs text-gray-500">@order.ItemCode</div>
+                                </td>
+
+                                <td class="px-4 py-3 text-gray-700">@order.CompletedQuantity / @order.Quantity</td>
+
+                                <td class="px-4 py-3">
+                                    <div class="relative h-5 w-48 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                                        <div class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700">
+                                            @order.ProgressPercentage.ToString("0.0")%
+                                        </div>
+                                        <div class="h-full @progressClass transition-all duration-300" style="width: @(order.ProgressPercentage > 0 ? order.ProgressPercentage : 0)%"></div>
+                                    </div>
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    <div class="text-gray-700">@order.PlannedStartDate.ToString("dd/MM/yyyy")</div>
+                                    @if (order.ActualStartDate.HasValue)
+                                    {
+                                        <div class="mt-1 text-xs text-green-700">
+                                            <i class="bi bi-check-circle"></i>
+                                            @order.ActualStartDate.Value.ToString("dd/MM/yyyy")
+                                        </div>
+                                    }
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    <div class="text-gray-700">@order.PlannedEndDate.ToString("dd/MM/yyyy")</div>
+                                    @if (order.ActualEndDate.HasValue)
+                                    {
+                                        <div class="mt-1 text-xs text-green-700">
+                                            <i class="bi bi-check-circle"></i>
+                                            @order.ActualEndDate.Value.ToString("dd/MM/yyyy")
+                                        </div>
+                                    }
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    @if (order.Status == "Draft")
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Draft</span>
+                                    }
+                                    else if (order.Status == "Released")
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">Released</span>
+                                    }
+                                    else if (order.Status == "InProgress")
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">In Progress</span>
+                                    }
+                                    else if (order.Status == "Completed")
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Completed</span>
+                                    }
+                                    else if (order.Status == "Cancelled")
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Cancelled</span>
+                                    }
+                                </td>
+
+                                <td class="px-4 py-3">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="/Production/ProductionOrders/Info?id=@order.Id" class="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-blue-700 hover:bg-blue-50" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <a href="/Production/ProductionOrders/Track?id=@order.Id" class="inline-flex items-center justify-center rounded-lg border border-cyan-200 bg-white px-3 py-2 text-sm text-cyan-700 hover:bg-cyan-50" title="Track">
+                                            <i class="bi bi-bar-chart"></i>
+                                        </a>
+
+                                        @if (order.Status == "Released")
+                                        {
+                                            <button type="button" class="inline-flex items-center justify-center rounded-lg border border-green-200 bg-white px-3 py-2 text-sm text-green-700 hover:bg-green-50" onclick="startProduction(@order.Id)" title="Start">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        }
+
+                                        @if (order.Status == "InProgress")
+                                        {
+                                            <button type="button" class="inline-flex items-center justify-center rounded-lg border border-green-200 bg-white px-3 py-2 text-sm text-green-700 hover:bg-green-50" onclick="completeProduction(@order.Id)" title="Complete">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-500">
+                                <div class="text-3xl"><i class="bi bi-inbox"></i></div>
+                                <div class="mt-2">No production orders found</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() {
+            const tokenInput = document.querySelector('#anti-forgery-form input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        function startProduction(id) {
+            if (!confirm('Start this production order?')) return;
+
+            fetch(`/Production/ProductionOrders/Index?handler=Start&id=${id}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': getAntiForgeryToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to start production');
+                }
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+
+        function completeProduction(id) {
+            if (!confirm('Mark this production order as completed?')) return;
+
+            fetch(`/Production/ProductionOrders/Index?handler=Complete&id=${id}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': getAntiForgeryToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to complete production');
+                }
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+    </script>
+}

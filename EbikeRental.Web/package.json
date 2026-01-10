@@ -1,0 +1,17 @@
+{
+  "name": "ebikerental.web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./Styles/input.css -o ./wwwroot/css/output.css",
+    "watch:css": "npx tailwindcss -i ./Styles/input.css -o ./wwwroot/css/output.css --watch",
+    "build:css:prod": "npx tailwindcss -i ./Styles/input.css -o ./wwwroot/css/output.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "tailwindcss": "^4.1.18"
+  }
+}

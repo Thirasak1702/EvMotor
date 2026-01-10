@@ -1,0 +1,168 @@
+﻿@page
+@model EbikeRental.Web.Pages.Purchasing.GR.InfoModel
+@{
+	ViewData["Title"] = Model.GR.Id == 0 ? "New Goods Receipt" : "Edit Goods Receipt";
+	ViewData["FormTitle"] = ViewData["Title"];
+	ViewData["FormIcon"] = "bi-inbox";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+	<div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+	<input type="hidden" asp-for="GR.Id" />
+
+	<!-- Goods Receipt Header Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-info-circle mr-2"></i>Goods Receipt Header
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div>
+				<label asp-for="GR.DocumentNumber" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-upc-scan mr-1"></i>GR Number <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="GR.DocumentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Auto-generated" readonly />
+				<span class="text-xs text-gray-500 mt-1 block">
+					<i class="bi bi-info-circle-fill mr-1"></i>Auto-generated when saved
+				</span>
+				<span asp-validation-for="GR.DocumentNumber" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="GR.PurchaseOrderId" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-link-45deg mr-1"></i>Reference PO Number
+				</label>
+				<select id="purchaseOrderSelect" 
+						asp-for="GR.PurchaseOrderId"
+						class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="">-- Select PO (Optional) --</option>
+					@foreach (var po in Model.ApprovedPOs)
+					{
+						<option value="@po.Id">@po.DocumentNumber - @po.VendorName</option>
+					}
+				</select>
+				<span class="text-xs text-gray-500 mt-1 block">Select to auto-fill items from PO</span>
+			</div>
+			<div>
+				<label asp-for="GR.ReceiptDate" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-calendar-event mr-1"></i>Receipt Date <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="GR.ReceiptDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+				<span asp-validation-for="GR.ReceiptDate" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Receipt Details Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-clipboard-check mr-2"></i>Receipt Details
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+			<div>
+				<label asp-for="GR.Status" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-toggle-on mr-1"></i>Status <span class="text-red-600">*</span>
+				</label>
+				<select asp-for="GR.Status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="Draft">Draft</option>
+					<option value="Posted">Posted</option>
+					<option value="Cancelled">Cancelled</option>
+				</select>
+				<span asp-validation-for="GR.Status" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="GR.VendorName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-building mr-1"></i>Vendor Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="GR.VendorName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter vendor name" required />
+				<span asp-validation-for="GR.VendorName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="GR.WarehouseId" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-house mr-1"></i>Warehouse <span class="text-red-600">*</span>
+				</label>
+				<select asp-for="GR.WarehouseId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+					<option value="">-- Select Warehouse --</option>
+					@foreach (var wh in Model.Warehouses)
+					{
+						<option value="@wh.Id">@wh.Name (@wh.Code)</option>
+					}
+				</select>
+				<span asp-validation-for="GR.WarehouseId" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+			<div>
+				<label asp-for="GR.ReceivedBy" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-person mr-1"></i>Received By
+				</label>
+				<input asp-for="GR.ReceivedBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Receiver name" />
+			</div>
+			<div class="md:col-span-2">
+				<label asp-for="GR.Notes" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-sticky mr-1"></i>Notes
+				</label>
+				<textarea asp-for="GR.Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Additional notes or remarks..."></textarea>
+			</div>
+		</div>
+	</div>
+
+	<hr class="my-6 border-gray-200" />
+
+	<!-- Goods Receipt Items Section -->
+	<div class="mb-6">
+		<div class="flex items-center justify-between mb-3">
+			<h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+				<i class="bi bi-list-ul"></i>
+				<span>Goods Receipt Items</span>
+			</h5>
+			<button type="button" 
+					id="addItemBtn"
+					class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+				<i class="bi bi-plus-circle"></i>
+				<span>Add Item</span>
+			</button>
+		</div>
+
+		<div class="overflow-x-auto border border-gray-200 rounded-lg">
+			<table class="min-w-full text-sm" id="itemsTable">
+				<thead class="bg-gray-50 text-gray-700">
+					<tr>
+						<th class="px-3 py-2 text-left w-[20%]">Item</th>
+						<th class="px-3 py-2 text-left w-[10%]">Ordered Qty</th>
+						<th class="px-3 py-2 text-left w-[10%]">Received Qty</th>
+						<th class="px-3 py-2 text-left w-[8%]">UOM</th>
+						<th class="px-3 py-2 text-left w-[12%]">Batch Number</th>
+						<th class="px-3 py-2 text-left w-[12%]">Expiry Date</th>
+						<th class="px-3 py-2 text-left w-[12%]">Serial Number</th>
+						<th class="px-3 py-2 text-left w-[10%]">Notes</th>
+						<th class="px-3 py-2 text-center w-[6%]">Actions</th>
+					</tr>
+				</thead>
+				<tbody id="itemsTableBody" class="divide-y divide-gray-200 bg-white"></tbody>
+			</table>
+		</div>
+		
+		<div id="noItemsMessage" class="text-center py-8 text-gray-500 text-sm border border-gray-200 rounded-lg mt-2" style="display:none;">
+			<i class="bi bi-inbox text-4xl text-gray-400"></i>
+			<div class="mt-3 font-medium">No items added yet</div>
+			<div class="text-xs mt-1">Click "Add Item" button to add items or select a PO to auto-fill</div>
+		</div>
+	</div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+	<script>
+		window.grPageData = {
+			items: @Html.Raw(Model.ItemsJson ?? "[]"),
+			existingItems: @Html.Raw(Model.GrItemsJson ?? "[]")
+		};
+	</script>
+	<script src="~/js/gr-info.js"></script>
+}

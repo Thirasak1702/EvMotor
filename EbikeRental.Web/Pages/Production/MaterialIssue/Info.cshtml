@@ -1,0 +1,416 @@
+﻿@page
+@model EbikeRental.Web.Pages.Production.MaterialIssue.InfoModel
+@{
+    ViewData["Title"] = Model.MI.Id == 0 ? "New Material Issue" : "Edit Material Issue";
+    ViewData["FormTitle"] = ViewData["Title"];
+    ViewData["FormIcon"] = "bi-box-arrow-up";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+    <div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+    <input type="hidden" asp-for="MI.Id" />
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Material Issue Information -->
+    <div class="mb-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-800">Material Issue Information</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="MI.DocumentNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-hash mr-1"></i>
+                    Document Number
+                </label>
+                <input asp-for="MI.DocumentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+            </div>
+            <div>
+                <label asp-for="MI.IssueDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-calendar-event mr-1"></i>
+                    Issue Date
+                </label>
+                <input asp-for="MI.IssueDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="MI.IssueDate" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="MI.ProductionOrderId" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-gear mr-1"></i>
+                    Production Order
+                </label>
+                <div class="flex gap-2">
+                    <select asp-for="MI.ProductionOrderId" id="productionOrderSelect" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Select PO (Optional) --</option>
+                        @foreach (var po in Model.ProductionOrders)
+                        {
+                            <option value="@po.Id">@po.OrderNumber - @po.ItemName</option>
+                        }
+                    </select>
+                    <button type="button" onclick="generateFromPO()" id="loadPoBtn" class="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                        <i class="bi bi-arrow-down-circle"></i> Load
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="bi bi-info-circle mr-1"></i>
+                    Load materials from Production Order BOM
+                </p>
+            </div>
+            <div>
+                <label asp-for="MI.WarehouseId" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-box-seam mr-1"></i>
+                    Warehouse <span class="text-red-600">*</span>
+                </label>
+                <select asp-for="MI.WarehouseId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Select Warehouse --</option>
+                    @foreach (var wh in Model.Warehouses)
+                    {
+                        <option value="@wh.Id">@wh.Code - @wh.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="MI.WarehouseId" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="MI.IssuedBy" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-person mr-1"></i>
+                    Issued By <span class="text-red-600">*</span>
+                </label>
+                <input asp-for="MI.IssuedBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="MI.IssuedBy" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-lightbulb mr-1"></i>
+                    Quick Info
+                </label>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800">
+                    <i class="bi bi-info-circle mr-1"></i>
+                    Select PO and click Load to auto-fill materials
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="MI.Notes" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-card-text mr-1"></i>
+                Notes
+            </label>
+            <textarea asp-for="MI.Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Additional notes or remarks..."></textarea>
+        </div>
+    </div>
+
+    <!-- Materials to Issue -->
+    <div class="mb-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-800">Materials to Issue</h3>
+            <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700" onclick="addItem()">
+                <i class="bi bi-plus"></i>
+                Add Item
+            </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 text-sm" id="itemsTable">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                        <th class="px-3 py-3">Item</th>
+                        <th class="px-3 py-3">Required Qty</th>
+                        <th class="px-3 py-3">Issued Qty</th>
+                        <th class="px-3 py-3">UOM</th>
+                        <th class="px-3 py-3">Batch No.</th>
+                        <th class="px-3 py-3">Expiry Date</th>
+                        <th class="px-3 py-3">Serial No.</th>
+                        <th class="px-3 py-3">Notes</th>
+                        <th class="px-3 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white" id="itemsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let itemIndex = 0;
+        const items = @Html.Raw(Json.Serialize(Model.Items));
+        const existingItems = @Html.Raw(Json.Serialize(Model.MI.Items));
+
+        function getItemById(itemId) {
+            return items.find(i => i.id === parseInt(itemId));
+        }
+
+        function addItem(existingItem = null) {
+            const tbody = document.getElementById('itemsBody');
+            const row = tbody.insertRow();
+
+            const selectedItemId = existingItem?.itemId || '';
+            const selectedItem = selectedItemId ? getItemById(selectedItemId) : null;
+
+            // Determine visibility of tracking fields
+            const showBatch = selectedItem?.isBatch || false;
+            const showExpiry = selectedItem?.isExpiry || false;
+            const showSerial = selectedItem?.isSerial || false;
+
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="MI.Items[${itemIndex}].ItemId" 
+                            class="item-select w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            onchange="updateItemTracking(this)" required>
+                        <option value="">-- Select Item --</option>
+                        ${items.map(item => `<option value="${item.id}" ${item.id === selectedItemId ? 'selected' : ''}>${item.code} - ${item.name}</option>`).join('')}
+                    </select>
+                    <input type="hidden" name="MI.Items[${itemIndex}].Id" value="${existingItem?.id || 0}" />
+                    <input type="hidden" class="item-isbatch" value="${selectedItem?.isBatch || false}" />
+                    <input type="hidden" class="item-isexpiry" value="${selectedItem?.isExpiry || false}" />
+                    <input type="hidden" class="item-isserial" value="${selectedItem?.isSerial || false}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="MI.Items[${itemIndex}].RequiredQuantity" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           step="0.01" value="${existingItem?.requiredQuantity || ''}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="MI.Items[${itemIndex}].IssuedQuantity" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           step="0.01" value="${existingItem?.issuedQuantity || ''}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="MI.Items[${itemIndex}].UnitOfMeasure" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="${existingItem?.unitOfMeasure || 'PCS'}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <div class="batch-container" style="display: ${showBatch ? 'block' : 'none'}">
+                        <input type="text" name="MI.Items[${itemIndex}].BatchNumber" 
+                               class="batch-field w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               value="${existingItem?.batchNumber || ''}" ${showBatch ? 'required' : ''} />
+                    </div>
+                    <div class="batch-na" style="display: ${showBatch ? 'none' : 'block'}">
+                        <span class="text-gray-400 text-sm">N/A</span>
+                    </div>
+                </td>
+                <td class="px-3 py-2">
+                    <div class="expiry-container" style="display: ${showExpiry ? 'block' : 'none'}">
+                        <input type="date" name="MI.Items[${itemIndex}].ExpiryDate" 
+                               class="expiry-field w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               value="${existingItem?.expiryDate ? new Date(existingItem.expiryDate).toISOString().split('T')[0] : ''}" ${showExpiry ? 'required' : ''} />
+                    </div>
+                    <div class="expiry-na" style="display: ${showExpiry ? 'none' : 'block'}">
+                        <span class="text-gray-400 text-sm">N/A</span>
+                    </div>
+                </td>
+                <td class="px-3 py-2">
+                    <div class="serial-container" style="display: ${showSerial ? 'block' : 'none'}">
+                        <input type="text" name="MI.Items[${itemIndex}].SerialNumber" 
+                               class="serial-field w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               value="${existingItem?.serialNumber || ''}" ${showSerial ? 'required' : ''} />
+                    </div>
+                    <div class="serial-na" style="display: ${showSerial ? 'none' : 'block'}">
+                        <span class="text-gray-400 text-sm">N/A</span>
+                    </div>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="MI.Items[${itemIndex}].Notes" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="${existingItem?.notes || ''}" />
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            itemIndex++;
+        }
+
+        function updateItemTracking(selectElement) {
+            const row = selectElement.closest('tr');
+            const itemId = selectElement.value;
+            const item = getItemById(itemId);
+
+            if (!item) return;
+
+            // Update hidden tracking flags
+            row.querySelector('.item-isbatch').value = item.isBatch;
+            row.querySelector('.item-isexpiry').value = item.isExpiry;
+            row.querySelector('.item-isserial').value = item.isSerial;
+
+            // Show/hide batch field
+            const batchContainer = row.querySelector('.batch-container');
+            const batchNa = row.querySelector('.batch-na');
+            const batchField = row.querySelector('.batch-field');
+            if (item.isBatch) {
+                batchContainer.style.display = 'block';
+                batchNa.style.display = 'none';
+                batchField.required = true;
+            } else {
+                batchContainer.style.display = 'none';
+                batchNa.style.display = 'block';
+                batchField.required = false;
+                batchField.value = '';
+            }
+
+            // Show/hide expiry field
+            const expiryContainer = row.querySelector('.expiry-container');
+            const expiryNa = row.querySelector('.expiry-na');
+            const expiryField = row.querySelector('.expiry-field');
+            if (item.isExpiry) {
+                expiryContainer.style.display = 'block';
+                expiryNa.style.display = 'none';
+                expiryField.required = true;
+            } else {
+                expiryContainer.style.display = 'none';
+                expiryNa.style.display = 'block';
+                expiryField.required = false;
+                expiryField.value = '';
+            }
+
+            // Show/hide serial field
+            const serialContainer = row.querySelector('.serial-container');
+            const serialNa = row.querySelector('.serial-na');
+            const serialField = row.querySelector('.serial-field');
+            if (item.isSerial) {
+                serialContainer.style.display = 'block';
+                serialNa.style.display = 'none';
+                serialField.required = true;
+            } else {
+                serialContainer.style.display = 'none';
+                serialNa.style.display = 'block';
+                serialField.required = false;
+                serialField.value = '';
+            }
+
+            // Update UOM
+            const uomField = row.querySelector('[name*="UnitOfMeasure"]');
+            if (uomField && item.unitOfMeasure) {
+                uomField.value = item.unitOfMeasure;
+            }
+        }
+
+       async function generateFromPO() {
+            const select = document.getElementById('productionOrderSelect');
+            const poId = select.value;
+
+            if (!poId) {
+                showMessage('warning', 'Please select a Production Order first.');
+                return;
+            }
+
+            // Show loading
+            const loadBtn = document.getElementById('loadPoBtn');
+            const originalText = loadBtn.innerHTML;
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+
+            try {
+                const response = await fetch(`/Production/MaterialIssue/Info?handler=GenerateFromPO&poId=${poId}`);
+                const result = await response.json();
+
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = originalText;
+
+                if (result.success && result.data) {
+                    // Clear existing items
+                    document.getElementById('itemsBody').innerHTML = '';
+                    itemIndex = 0;
+
+                    // Add generated items
+                    result.data.items.forEach(item => {
+                        addItem();
+                        const lastRow = document.getElementById('itemsBody').lastElementChild;
+                        lastRow.querySelector('[name*="ItemId"]').value = item.itemId;
+                        lastRow.querySelector('[name*="RequiredQuantity"]').value = item.requiredQuantity;
+                        lastRow.querySelector('[name*="IssuedQuantity"]').value = item.issuedQuantity;
+                        lastRow.querySelector('[name*="UnitOfMeasure"]').value = item.unitOfMeasure;
+                        
+                        // Trigger item tracking update
+                        const itemSelect = lastRow.querySelector('[name*="ItemId"]');
+                        updateItemTracking(itemSelect);
+                    });
+
+                    showMessage('success', result.message || 'Materials loaded from Production Order successfully!');
+                } else {
+                    showMessage('error', result.message || 'Failed to load materials');
+                }
+            } catch (error) {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = originalText;
+                showMessage('error', 'Error loading materials: ' + error.message);
+                console.error('Error:', error);
+            }
+        }
+
+        function showMessage(type, message) {
+            // Remove existing message if any
+            const existingMsg = document.querySelector('.alert-message');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-700',
+                error: 'bg-red-50 border-red-200 text-red-700',
+                warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+                info: 'bg-blue-50 border-blue-200 text-blue-700'
+            };
+
+            const icons = {
+                success: 'bi-check-circle',
+                error: 'bi-x-circle',
+                warning: 'bi-exclamation-triangle',
+                info: 'bi-info-circle'
+            };
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `alert-message mb-4 rounded-lg border px-4 py-3 text-sm ${colors[type] || colors.info}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <i class="bi ${icons[type] || icons.info} text-lg"></i>
+                    <div class="flex-1">${message}</div>
+                    <button onclick="this.closest('.alert-message').remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `;
+
+            const form = document.getElementById('info-form');
+            form.insertBefore(messageDiv, form.firstChild);
+
+            // Auto remove after 10 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 10000);
+        }
+
+        // Load existing items if editing
+        @if (Model.MI.Items.Any())
+        {
+                <text>
+                // Load existing items properly
+                existingItems.forEach(item => {
+                    addItem(item);
+                });
+                </text>
+        }
+    </script>
+}

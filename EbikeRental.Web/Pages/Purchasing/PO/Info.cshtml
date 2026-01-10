@@ -1,0 +1,444 @@
+﻿@page
+@model EbikeRental.Web.Pages.Purchasing.PO.InfoModel
+@{
+	ViewData["Title"] = Model.PO.Id == 0 ? "New Purchase Order" : "Edit Purchase Order";
+	ViewData["FormTitle"] = ViewData["Title"];
+	ViewData["FormIcon"] = "bi-receipt";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+	<div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+	<input type="hidden" asp-for="PO.Id" />
+
+	<!-- Purchase Order Header Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-info-circle mr-2"></i>Purchase Order Header
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div>
+				<label asp-for="PO.DocumentNumber" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-upc-scan mr-1"></i>PO Number <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PO.DocumentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Auto-generated" readonly />
+				<span class="text-xs text-gray-500 mt-1 block">
+					<i class="bi bi-info-circle-fill mr-1"></i>Auto-generated when saved
+				</span>
+				<span asp-validation-for="PO.DocumentNumber" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PO.PurchaseRequisitionId" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-link-45deg mr-1"></i>Reference PR Number
+				</label>
+				<select asp-for="PO.PurchaseRequisitionId"
+						class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+						id="prReference"
+						onchange="loadPRDetails()">
+					<option value="">-- Select PR (Optional) --</option>
+					@foreach (var pr in Model.ApprovedPRs)
+					{
+						<option value="@pr.Id">@pr.DocumentNumber - @pr.DepartmentName</option>
+					}
+				</select>
+				<span class="text-xs text-gray-500 mt-1 block">Select to auto-fill items from PR</span>
+			</div>
+			<div>
+				<label asp-for="PO.OrderDate" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-calendar-event mr-1"></i>Order Date <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PO.OrderDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				<span asp-validation-for="PO.OrderDate" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Vendor Information Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-shop mr-2"></i>Vendor Information
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+			<div>
+				<label asp-for="PO.Status" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-toggle-on mr-1"></i>Status <span class="text-red-600">*</span>
+				</label>
+				<select asp-for="PO.Status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="Draft">Draft</option>
+					<option value="Sent">Sent to Vendor</option>
+					<option value="Confirmed">Confirmed</option>
+					<option value="PartialReceived">Partially Received</option>
+					<option value="Received">Fully Received</option>
+					<option value="Cancelled">Cancelled</option>
+				</select>
+				<span asp-validation-for="PO.Status" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PO.VendorName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-building mr-1"></i>Vendor Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PO.VendorName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter vendor name" />
+				<span asp-validation-for="PO.VendorName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PO.VendorContact" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-telephone mr-1"></i>Vendor Contact
+				</label>
+				<input asp-for="PO.VendorContact" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contact person/phone" />
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+			<div class="md:col-span-2">
+				<label asp-for="PO.DeliveryAddress" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-geo-alt mr-1"></i>Delivery Address
+				</label>
+				<input asp-for="PO.DeliveryAddress" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter delivery address" />
+			</div>
+			<div>
+				<label asp-for="PO.ExpectedDeliveryDate" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-calendar-check mr-1"></i>Expected Delivery
+				</label>
+				<input asp-for="PO.ExpectedDeliveryDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+			</div>
+		</div>
+
+		<div>
+			<label asp-for="PO.Notes" class="block text-sm font-medium text-gray-700 mb-2">
+				<i class="bi bi-sticky mr-1"></i>Notes
+			</label>
+			<textarea asp-for="PO.Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Additional notes or instructions..."></textarea>
+		</div>
+	</div>
+
+	<hr class="my-6 border-gray-200" />
+
+	<!-- Purchase Order Items Section -->
+	<div class="mb-6">
+		<div class="flex items-center justify-between mb-3">
+			<h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+				<i class="bi bi-list-ul"></i>
+				<span>Purchase Order Items</span>
+			</h5>
+			<button type="button"
+					class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+					onclick="addPOItemRow()">
+				<i class="bi bi-plus-circle"></i>
+				<span>Add Item</span>
+			</button>
+		</div>
+
+		<div class="overflow-x-auto border border-gray-200 rounded-lg">
+			<table class="min-w-full text-sm" id="poItemsTable">
+				<thead class="bg-gray-50 text-gray-700">
+					<tr>
+						<th class="px-3 py-2 text-left w-[4%]">#</th>
+						<th class="px-3 py-2 text-left w-[18%]">Item</th>
+						<th class="px-3 py-2 text-left w-[15%]">Description</th>
+						<th class="px-3 py-2 text-left w-[8%]">Qty</th>
+						<th class="px-3 py-2 text-left w-[6%]">UOM</th>
+						<th class="px-3 py-2 text-left w-[10%]">Unit Price</th>
+						<th class="px-3 py-2 text-left w-[8%]">Disc %</th>
+						<th class="px-3 py-2 text-left w-[8%]">Tax %</th>
+						<th class="px-3 py-2 text-left w-[12%]">Line Total</th>
+						<th class="px-3 py-2 text-left w-[11%]">Notes</th>
+						<th class="px-3 py-2 text-left w-[4%]">Actions</th>
+					</tr>
+				</thead>
+
+				<tbody id="poItemsBody" class="divide-y divide-gray-200 bg-white">
+					@if (Model.PO.Items != null && Model.PO.Items.Any())
+					{
+						@for (int i = 0; i < Model.PO.Items.Count; i++)
+						{
+							<tr>
+								<td class="px-3 py-2 align-top">
+									<input type="hidden" data-field="Id" name="PO.Items[@i].Id" value="@Model.PO.Items[i].Id" />
+									<span class="row-number">@(i + 1)</span>
+								</td>
+								<td class="px-3 py-2 align-top">
+									<select data-field="ItemId" name="PO.Items[@i].ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+										<option value="">-- Select --</option>
+										@foreach (var item in Model.Items)
+										{
+											<option value="@item.Id" selected="@(item.Id == Model.PO.Items[i].ItemId)">@item.Code - @item.Name</option>
+										}
+									</select>
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="text" data-field="Description" name="PO.Items[@i].Description" value="@Model.PO.Items[i].Description" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="Quantity" name="PO.Items[@i].Quantity" value="@Model.PO.Items[i].Quantity" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required onchange="calculatePOLineTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="text" data-field="UnitOfMeasure" name="PO.Items[@i].UnitOfMeasure" value="@Model.PO.Items[i].UnitOfMeasure" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="UnitPrice" name="PO.Items[@i].UnitPrice" value="@Model.PO.Items[i].UnitPrice" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="DiscountPercent" name="PO.Items[@i].DiscountPercent" value="@Model.PO.Items[i].DiscountPercent" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="TaxPercent" name="PO.Items[@i].TaxPercent" value="@Model.PO.Items[i].TaxPercent" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 po-line-total" value="@Model.PO.Items[i].LineTotal" readonly />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="text" data-field="Notes" name="PO.Items[@i].Notes" value="@Model.PO.Items[i].Notes" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removePOItemRow(this)" title="Remove">
+										<i class="bi bi-trash"></i>
+									</button>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+
+				<tfoot class="bg-gray-50">
+					<tr>
+						<td colspan="8" class="px-3 py-2 text-right font-semibold text-gray-700">Grand Total:</td>
+						<td colspan="3" class="px-3 py-2">
+							<input type="number" id="poGrandTotal" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 font-semibold" readonly />
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+
+	<script>
+		let itemsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+			Model.Items,
+			new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+		));
+
+		async function loadPRDetails() {
+			const prId = document.getElementById('prReference').value;
+			if (!prId) {
+				return;
+			}
+
+			try {
+				const response = await fetch(`/Purchasing/PO/Info?handler=PRDetails&prId=${prId}`);
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				const prData = await response.json();
+
+				if (!prData.success) {
+					alert(prData.message || 'Failed to load PR details');
+					return;
+				}
+
+				const tbody = document.getElementById('poItemsBody');
+				tbody.innerHTML = '';
+
+				if (!prData.items || prData.items.length === 0) {
+					alert('Selected PR has no items');
+					return;
+				}
+
+				prData.items.forEach((item, index) => {
+					addPOItemFromPR(item, index);
+				});
+
+				reindexPOItems();
+				calculatePOGrandTotal();
+
+				console.log(`Loaded ${prData.items.length} items from PR ${prData.documentNumber}`);
+				
+			} catch (error) {
+				console.error('Error loading PR details:', error);
+				alert('Failed to load PR details. Please try again.');
+			}
+		}
+
+		function addPOItemFromPR(prItem, index) {
+			const tbody = document.getElementById('poItemsBody');
+			const newRow = document.createElement('tr');
+
+			const itemId = prItem.itemId || 0;
+			const description = prItem.description || '';
+			const quantity = prItem.quantity || 1;
+			const unitOfMeasure = prItem.unitOfMeasure || 'EA';
+			const estimatedUnitPrice = prItem.estimatedUnitPrice || 0;
+			const notes = prItem.notes || '';
+
+			let itemOptions = '<option value="">-- Select --</option>';
+			itemsData.forEach(item => {
+				const selected = (item.id === itemId) ? 'selected' : '';
+				itemOptions += `<option value="${item.id}" ${selected}>${item.code} - ${item.name}</option>`;
+			});
+
+			newRow.innerHTML = getPOItemRowHtml({
+				id: 0,
+				itemOptions,
+				description,
+				quantity,
+				unitOfMeasure,
+				unitPrice: estimatedUnitPrice,
+				discountPercent: 0,
+				taxPercent: 7,
+				notes
+			});
+
+			tbody.appendChild(newRow);
+
+			const qtyInput = newRow.querySelector('[data-field="Quantity"]');
+			if (qtyInput) {
+				calculatePOLineTotal(qtyInput);
+			}
+		}
+
+		function addPOItemRow() {
+			const tbody = document.getElementById('poItemsBody');
+			const newRow = document.createElement('tr');
+
+			let itemOptions = '<option value="">-- Select --</option>';
+			itemsData.forEach(item => {
+				itemOptions += `<option value="${item.id}">${item.code} - ${item.name}</option>`;
+			});
+
+			newRow.innerHTML = getPOItemRowHtml({
+				id: 0,
+				itemOptions,
+				description: '',
+				quantity: 1,
+				unitOfMeasure: 'EA',
+				unitPrice: 0,
+				discountPercent: 0,
+				taxPercent: 7,
+				notes: ''
+			});
+
+			tbody.appendChild(newRow);
+			reindexPOItems();
+			calculatePOLineTotal(newRow.querySelector('[data-field="Quantity"]'));
+		}
+
+		function removePOItemRow(button) {
+			button.closest('tr').remove();
+			reindexPOItems();
+			calculatePOGrandTotal();
+		}
+
+		function getPOItemRowHtml(d) {
+			return `
+				<td class="px-3 py-2 align-top">
+					<input type="hidden" data-field="Id" value="${d.id}" />
+					<span class="row-number"></span>
+				</td>
+				<td class="px-3 py-2 align-top">
+					<select data-field="ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+						${d.itemOptions}
+					</select>
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="text" data-field="Description" value="${escapeHtml(d.description)}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="Quantity" value="${d.quantity}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required onchange="calculatePOLineTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="text" data-field="UnitOfMeasure" value="${escapeHtml(d.unitOfMeasure)}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="UnitPrice" value="${d.unitPrice}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="DiscountPercent" value="${d.discountPercent}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="TaxPercent" value="${d.taxPercent}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculatePOLineTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 po-line-total" value="0" readonly />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="text" data-field="Notes" value="${escapeHtml(d.notes)}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removePOItemRow(this)" title="Remove">
+						<i class="bi bi-trash"></i>
+					</button>
+				</td>
+			`;
+		}
+
+		function reindexPOItems() {
+			const rows = document.querySelectorAll('#poItemsBody tr');
+			rows.forEach((row, index) => {
+				const rowNum = row.querySelector('.row-number');
+				if (rowNum) rowNum.textContent = index + 1;
+
+				setFieldName(row, 'Id', index);
+				setFieldName(row, 'ItemId', index);
+				setFieldName(row, 'Description', index);
+				setFieldName(row, 'Quantity', index);
+				setFieldName(row, 'UnitOfMeasure', index);
+				setFieldName(row, 'UnitPrice', index);
+				setFieldName(row, 'DiscountPercent', index);
+				setFieldName(row, 'TaxPercent', index);
+				setFieldName(row, 'Notes', index);
+			});
+		}
+
+		function setFieldName(row, field, index) {
+			const el = row.querySelector(`[data-field="${field}"]`);
+			if (!el) return;
+			el.name = `PO.Items[${index}].${field}`;
+		}
+
+		function calculatePOLineTotal(input) {
+			const row = input.closest('tr');
+			const qty = parseFloat(row.querySelector('[data-field="Quantity"]').value) || 0;
+			const price = parseFloat(row.querySelector('[data-field="UnitPrice"]').value) || 0;
+			const disc = parseFloat(row.querySelector('[data-field="DiscountPercent"]').value) || 0;
+			const tax = parseFloat(row.querySelector('[data-field="TaxPercent"]').value) || 0;
+
+			const lineTotal = qty * price * (1 - disc / 100) * (1 + tax / 100);
+			row.querySelector('.po-line-total').value = lineTotal.toFixed(2);
+			calculatePOGrandTotal();
+		}
+
+		function calculatePOGrandTotal() {
+			let grandTotal = 0;
+			document.querySelectorAll('.po-line-total').forEach(input => {
+				grandTotal += parseFloat(input.value) || 0;
+			});
+			document.getElementById('poGrandTotal').value = grandTotal.toFixed(2);
+		}
+
+		function escapeHtml(value) {
+			if (value === null || value === undefined) return '';
+			return String(value)
+				.replaceAll('&', '&amp;')
+				.replaceAll('<', '&lt;')
+				.replaceAll('>', '&gt;')
+				.replaceAll('"', '&quot;')
+				.replaceAll("'", '&#39;');
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			reindexPOItems();
+			document.querySelectorAll('#poItemsBody [data-field="Quantity"], #poItemsBody [data-field="UnitPrice"], #poItemsBody [data-field="DiscountPercent"], #poItemsBody [data-field="TaxPercent"]').forEach(input => {
+				calculatePOLineTotal(input);
+			});
+		});
+	</script>
+}

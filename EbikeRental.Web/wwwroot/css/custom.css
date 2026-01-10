@@ -1,0 +1,12 @@
+/* Minimal Custom Styles for EbikeRental with Tailwind CSS */
+
+/* Remove sidebar-container class since we're using Tailwind directly */
+
+/* Additional custom utilities can be added here */
+
+/* Fix for sticky positioning */
+.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+}
+

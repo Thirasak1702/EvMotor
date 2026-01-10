@@ -1,0 +1,141 @@
+﻿@page
+@model EbikeRental.Web.Pages.Masters.Users.InfoModel
+@{
+	ViewData["Title"] = Model.User.Id == 0 ? "New User" : "Edit User";
+	ViewData["FormTitle"] = ViewData["Title"];
+	ViewData["FormIcon"] = "bi-person";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+	<div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+	<input type="hidden" asp-for="User.Id" />
+
+	<!-- User Information Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-info-circle mr-2"></i>User Information
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+			<div>
+				<label asp-for="User.FirstName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-person mr-1"></i>First Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="User.FirstName" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="Enter first name" />
+				<span asp-validation-for="User.FirstName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="User.LastName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-person-fill mr-1"></i>Last Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="User.LastName" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="Enter last name" />
+				<span asp-validation-for="User.LastName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div>
+				<label asp-for="User.Email" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-envelope mr-1"></i>Email <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="User.Email" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   type="email" 
+					   placeholder="user@example.com" />
+				<span asp-validation-for="User.Email" class="text-red-600 text-sm mt-1 block"></span>
+				<span class="text-xs text-gray-500 mt-1 block">This will be used as username</span>
+			</div>
+			<div>
+				<label asp-for="User.PhoneNumber" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-telephone mr-1"></i>Phone Number
+				</label>
+				<input asp-for="User.PhoneNumber" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="e.g., 081-234-5678" />
+				<span asp-validation-for="User.PhoneNumber" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Roles Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-shield-check mr-2"></i>User Roles
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+				<div class="flex items-center h-5 mt-0.5">
+					<input type="checkbox" 
+						   name="User.Roles" 
+						   value="Admin" 
+						   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+						   @(Model.User.Roles.Contains("Admin") ? "checked" : "") />
+				</div>
+				<div class="ml-3">
+					<label class="text-sm font-medium text-gray-700">Administrator</label>
+					<p class="text-xs text-gray-500">Full system access</p>
+				</div>
+			</div>
+
+			<div class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+				<div class="flex items-center h-5 mt-0.5">
+					<input type="checkbox" 
+						   name="User.Roles" 
+						   value="Manager" 
+						   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+						   @(Model.User.Roles.Contains("Manager") ? "checked" : "") />
+				</div>
+				<div class="ml-3">
+					<label class="text-sm font-medium text-gray-700">Manager</label>
+					<p class="text-xs text-gray-500">Management access</p>
+				</div>
+			</div>
+
+			<div class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+				<div class="flex items-center h-5 mt-0.5">
+					<input type="checkbox" 
+						   name="User.Roles" 
+						   value="User" 
+						   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+						   @(Model.User.Roles.Contains("User") ? "checked" : "") />
+				</div>
+				<div class="ml-3">
+					<label class="text-sm font-medium text-gray-700">User</label>
+					<p class="text-xs text-gray-500">Basic access</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Status Section -->
+	<div class="mb-4">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-toggle-on mr-2"></i>Status
+		</h3>
+		
+		<div class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+			<div class="flex items-center h-5">
+				<input asp-for="User.IsActive" 
+					   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+					   type="checkbox" />
+			</div>
+			<div class="ml-3">
+				<label asp-for="User.IsActive" class="text-sm font-medium text-gray-700">Active User</label>
+				<p class="text-xs text-gray-500">Inactive users cannot log in to the system</p>
+			</div>
+		</div>
+	</div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

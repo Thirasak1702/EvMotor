@@ -1,0 +1,287 @@
+﻿@page
+@model EbikeRental.Web.Pages.Purchasing.PR.InfoModel
+@{
+	ViewData["Title"] = Model.PR.Id == 0 ? "New Purchase Requisition" : "Edit Purchase Requisition";
+	ViewData["FormTitle"] = ViewData["Title"];
+	ViewData["FormIcon"] = "bi-file-text";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+	<div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+	<input type="hidden" asp-for="PR.Id" />
+
+	<!-- Requisition Header Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-info-circle mr-2"></i>Requisition Header
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<div>
+				<label asp-for="PR.DocumentNumber" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-upc-scan mr-1"></i>PR Number <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PR.DocumentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Auto-generated" readonly />
+				<span class="text-xs text-gray-500 mt-1 block">
+					<i class="bi bi-info-circle-fill mr-1"></i>Auto-generated when saved
+				</span>
+				<span asp-validation-for="PR.DocumentNumber" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PR.Date" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-calendar-event mr-1"></i>Requisition Date <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PR.Date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="date" />
+				<span asp-validation-for="PR.Date" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PR.Status" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-toggle-on mr-1"></i>Status <span class="text-red-600">*</span>
+				</label>
+				<select asp-for="PR.Status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="Draft">Draft</option>
+					<option value="Pending">Pending Approval</option>
+					<option value="Approved">Approved</option>
+					<option value="Rejected">Rejected</option>
+				</select>
+				<span asp-validation-for="PR.Status" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Requestor Information Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-person-badge mr-2"></i>Requestor Information
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+			<div>
+				<label asp-for="PR.DepartmentName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-building mr-1"></i>Department Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PR.DepartmentName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Production, Sales, IT" />
+				<span asp-validation-for="PR.DepartmentName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="PR.RequestorName" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-person mr-1"></i>Requestor Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="PR.RequestorName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Full name of requestor" />
+				<span asp-validation-for="PR.RequestorName" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+
+		<div>
+			<label asp-for="PR.Notes" class="block text-sm font-medium text-gray-700 mb-2">
+				<i class="bi bi-sticky mr-1"></i>Notes
+			</label>
+			<textarea asp-for="PR.Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Additional notes or special requirements..."></textarea>
+		</div>
+	</div>
+
+	<hr class="my-6 border-gray-200" />
+
+	<!-- Requisition Items Section -->
+	<div class="mb-6">
+		<div class="flex items-center justify-between mb-3">
+			<h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+				<i class="bi bi-list-ul"></i>
+				<span>Requisition Items</span>
+			</h5>
+			<button type="button"
+					class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+					onclick="addPRItemRow()">
+				<i class="bi bi-plus-circle"></i>
+				<span>Add Item</span>
+			</button>
+		</div>
+
+		<div class="overflow-x-auto border border-gray-200 rounded-lg">
+			<table class="min-w-full text-sm" id="prItemsTable">
+				<thead class="bg-gray-50 text-gray-700">
+					<tr>
+						<th class="px-3 py-2 text-left w-[5%]">#</th>
+						<th class="px-3 py-2 text-left w-[20%]">Item</th>
+						<th class="px-3 py-2 text-left w-[15%]">Description</th>
+						<th class="px-3 py-2 text-left w-[10%]">Quantity</th>
+						<th class="px-3 py-2 text-left w-[8%]">UOM</th>
+						<th class="px-3 py-2 text-left w-[12%]">Est. Price</th>
+						<th class="px-3 py-2 text-left w-[12%]">Total</th>
+						<th class="px-3 py-2 text-left w-[12%]">Required Date</th>
+						<th class="px-3 py-2 text-left w-[6%]">Actions</th>
+					</tr>
+				</thead>
+
+				<tbody id="prItemsBody" class="divide-y divide-gray-200 bg-white">
+					@if (Model.PR.Items != null && Model.PR.Items.Any())
+					{
+						@for (int i = 0; i < Model.PR.Items.Count; i++)
+						{
+							<tr>
+								<td class="px-3 py-2 align-top">
+									<input type="hidden" data-field="Id" name="PR.Items[@i].Id" value="@Model.PR.Items[i].Id" />
+									<span class="row-number">@(i + 1)</span>
+								</td>
+								<td class="px-3 py-2 align-top">
+									<select data-field="ItemId" name="PR.Items[@i].ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+										<option value="">-- Select --</option>
+										@foreach (var item in Model.Items)
+										{
+											<option value="@item.Id" selected="@(item.Id == Model.PR.Items[i].ItemId)">@item.Code - @item.Name</option>
+										}
+									</select>
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="text" data-field="Description" name="PR.Items[@i].Description" value="@Model.PR.Items[i].Description" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="Quantity" name="PR.Items[@i].Quantity" value="@Model.PR.Items[i].Quantity" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required onchange="calculateRowTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="text" data-field="UnitOfMeasure" name="PR.Items[@i].UnitOfMeasure" value="@Model.PR.Items[i].UnitOfMeasure" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" data-field="EstimatedUnitPrice" name="PR.Items[@i].EstimatedUnitPrice" value="@Model.PR.Items[i].EstimatedUnitPrice" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculateRowTotal(this)" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="number" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 row-total" value="@Model.PR.Items[i].TotalAmount" readonly />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<input type="date" data-field="RequiredDate" name="PR.Items[@i].RequiredDate" value="@Model.PR.Items[i].RequiredDate.ToString("yyyy-MM-dd")" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+								</td>
+								<td class="px-3 py-2 align-top">
+									<button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removePRItemRow(this)" title="Remove">
+										<i class="bi bi-trash"></i>
+									</button>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+
+				<tfoot class="bg-gray-50">
+					<tr>
+						<td colspan="6" class="px-3 py-2 text-right font-semibold text-gray-700">Grand Total:</td>
+						<td colspan="3" class="px-3 py-2">
+							<input type="number" id="grandTotal" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 font-semibold" readonly />
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+
+	<script>
+		let itemsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+			Model.Items,
+			new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+		));
+
+		function addPRItemRow() {
+			const tbody = document.getElementById('prItemsBody');
+			const newRow = document.createElement('tr');
+			let itemOptions = '<option value="">-- Select --</option>';
+			itemsData.forEach(item => {
+				itemOptions += `<option value="${item.id}">${item.code} - ${item.name}</option>`;
+			});
+			const today = new Date().toISOString().split('T')[0];
+			newRow.innerHTML = `
+				<td class="px-3 py-2 align-top">
+					<input type="hidden" data-field="Id" value="0" />
+					<span class="row-number"></span>
+				</td>
+				<td class="px-3 py-2 align-top">
+					<select data-field="ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+						${itemOptions}
+					</select>
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="text" data-field="Description" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="Quantity" value="1" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required onchange="calculateRowTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="text" data-field="UnitOfMeasure" value="EA" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" data-field="EstimatedUnitPrice" value="0" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" onchange="calculateRowTotal(this)" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="number" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-gray-50 row-total" value="0" readonly />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<input type="date" data-field="RequiredDate" value="${today}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</td>
+				<td class="px-3 py-2 align-top">
+					<button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removePRItemRow(this)" title="Remove">
+						<i class="bi bi-trash"></i>
+					</button>
+				</td>
+			`;
+			tbody.appendChild(newRow);
+			reindexPRItems();
+			calculateRowTotal(newRow.querySelector('[data-field="Quantity"]'));
+		}
+
+		function removePRItemRow(button) {
+			button.closest('tr').remove();
+			reindexPRItems();
+			calculateGrandTotal();
+		}
+
+		function reindexPRItems() {
+			const rows = document.querySelectorAll('#prItemsBody tr');
+			rows.forEach((row, index) => {
+				const rowNum = row.querySelector('.row-number');
+				if (rowNum) rowNum.textContent = index + 1;
+				setFieldName(row, 'Id', index);
+				setFieldName(row, 'ItemId', index);
+				setFieldName(row, 'Description', index);
+				setFieldName(row, 'Quantity', index);
+				setFieldName(row, 'UnitOfMeasure', index);
+				setFieldName(row, 'EstimatedUnitPrice', index);
+				setFieldName(row, 'RequiredDate', index);
+			});
+		}
+
+		function setFieldName(row, field, index) {
+			const el = row.querySelector(`[data-field="${field}"]`);
+			if (!el) return;
+			el.name = `PR.Items[${index}].${field}`;
+		}
+
+		function calculateRowTotal(input) {
+			const row = input.closest('tr');
+			const qty = parseFloat(row.querySelector('[data-field="Quantity"]').value) || 0;
+			const price = parseFloat(row.querySelector('[data-field="EstimatedUnitPrice"]').value) || 0;
+			const total = qty * price;
+			row.querySelector('.row-total').value = total.toFixed(2);
+			calculateGrandTotal();
+		}
+
+		function calculateGrandTotal() {
+			let grandTotal = 0;
+			document.querySelectorAll('.row-total').forEach(input => {
+				grandTotal += parseFloat(input.value) || 0;
+			});
+			document.getElementById('grandTotal').value = grandTotal.toFixed(2);
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			reindexPRItems();
+			document.querySelectorAll('#prItemsBody [data-field="Quantity"], #prItemsBody [data-field="EstimatedUnitPrice"]').forEach(input => {
+				calculateRowTotal(input);
+			});
+		});
+	</script>
+}

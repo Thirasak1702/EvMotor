@@ -1,0 +1,106 @@
+﻿@page
+@model EbikeRental.Web.Pages.Masters.Warehouses.InfoModel
+@{
+	ViewData["Title"] = Model.Warehouse.Id == 0 ? "New Warehouse" : "Edit Warehouse";
+	ViewData["FormTitle"] = ViewData["Title"];
+	ViewData["FormIcon"] = "bi-building";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+	<div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+	<input type="hidden" asp-for="Warehouse.Id" />
+
+	<!-- Basic Information Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-info-circle mr-2"></i>Basic Information
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+			<div>
+				<label asp-for="Warehouse.Code" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-upc-scan mr-1"></i>Warehouse Code <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="Warehouse.Code" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="e.g., WH001" />
+				<span asp-validation-for="Warehouse.Code" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="Warehouse.Name" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-building mr-1"></i>Warehouse Name <span class="text-red-600">*</span>
+				</label>
+				<input asp-for="Warehouse.Name" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="e.g., Main Warehouse" />
+				<span asp-validation-for="Warehouse.Name" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+
+		<div>
+			<label asp-for="Warehouse.Location" class="block text-sm font-medium text-gray-700 mb-2">
+				<i class="bi bi-geo-alt mr-1"></i>Location
+			</label>
+			<textarea asp-for="Warehouse.Location" 
+					  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					  rows="2" 
+					  placeholder="Full address of warehouse..."></textarea>
+			<span asp-validation-for="Warehouse.Location" class="text-red-600 text-sm mt-1 block"></span>
+		</div>
+	</div>
+
+	<!-- Contact Information Section -->
+	<div class="mb-6">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-telephone mr-2"></i>Contact Information
+		</h3>
+		
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div>
+				<label asp-for="Warehouse.ContactPerson" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-person mr-1"></i>Contact Person
+				</label>
+				<input asp-for="Warehouse.ContactPerson" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="Name of contact person" />
+				<span asp-validation-for="Warehouse.ContactPerson" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+			<div>
+				<label asp-for="Warehouse.PhoneNumber" class="block text-sm font-medium text-gray-700 mb-2">
+					<i class="bi bi-telephone-fill mr-1"></i>Phone Number
+				</label>
+				<input asp-for="Warehouse.PhoneNumber" 
+					   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+					   placeholder="e.g., 02-123-4567" />
+				<span asp-validation-for="Warehouse.PhoneNumber" class="text-red-600 text-sm mt-1 block"></span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Status Section -->
+	<div class="mb-4">
+		<h3 class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+			<i class="bi bi-toggle-on mr-2"></i>Status
+		</h3>
+		
+		<div class="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+			<div class="flex items-center h-5">
+				<input asp-for="Warehouse.IsActive" 
+					   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+					   type="checkbox" />
+			</div>
+			<div class="ml-3">
+				<label asp-for="Warehouse.IsActive" class="text-sm font-medium text-gray-700">Active Warehouse</label>
+				<p class="text-xs text-gray-500">Inactive warehouses will not be available for transactions</p>
+			</div>
+		</div>
+	</div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

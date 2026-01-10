@@ -1,0 +1,63 @@
+@page
+@model EbikeRental.Web.Pages.Rental.Returns.ProcessModel
+@{
+    ViewData["Title"] = "Process Return";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-arrow-return-left me-2"></i>Process Return</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5>Rental Details</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Contract #:</strong> @Model.Rental.ContractNumber</p>
+                            <p><strong>Customer:</strong> @Model.Rental.CustomerName</p>
+                            <p><strong>Phone:</strong> @Model.Rental.CustomerPhone</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Asset:</strong> @Model.Rental.AssetCode</p>
+                            <p><strong>Start Date:</strong> @Model.Rental.RentalStartDate.ToShortDateString()</p>
+                            <p><strong>Expected Return:</strong> @Model.Rental.RentalEndDate.ToShortDateString()</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ReturnDate" class="form-label">Actual Return Date</label>
+                            <input asp-for="ReturnDate" class="form-control" type="date" />
+                            <span asp-validation-for="ReturnDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label">Return Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="4" placeholder="Any damages, issues, or remarks..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Complete Return
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

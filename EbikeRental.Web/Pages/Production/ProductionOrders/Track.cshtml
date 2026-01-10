@@ -1,0 +1,433 @@
+﻿@page
+@model EbikeRental.Web.Pages.Production.ProductionOrders.TrackModel
+@{
+    ViewData["Title"] = "Track Production Order";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-blue-600 text-white px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h5 class="text-xl font-semibold flex items-center gap-2">
+                    <i class="bi bi-bar-chart"></i> 
+                    Track Production Order: @Model.Order.OrderNumber
+                </h5>
+                <a href="/Production/ProductionOrders" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Order Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
+                    <h6 class="text-sm text-gray-600 mb-2">
+                        <i class="bi bi-box"></i> Product
+                    </h6>
+                    <h5 class="text-lg font-semibold text-gray-800">@Model.Order.ItemName</h5>
+                    <small class="text-sm text-gray-500">@Model.Order.ItemCode</small>
+                </div>
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
+                    <h6 class="text-sm text-gray-600 mb-2">
+                        <i class="bi bi-bullseye"></i> Target Quantity
+                    </h6>
+                    <h5 class="text-lg font-semibold text-gray-800">@Model.Order.Quantity</h5>
+                </div>
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
+                    <h6 class="text-sm text-gray-600 mb-2">
+                        <i class="bi bi-check-circle"></i> Completed
+                    </h6>
+                    <h5 class="text-lg font-semibold text-gray-800">@Model.CompletedQuantity</h5>
+                    <small class="text-sm text-gray-500">from QC Passed</small>
+                </div>
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
+                    <h6 class="text-sm text-gray-600 mb-2">
+                        <i class="fas fa-chart-pie"></i> Progress
+                    </h6>
+                    <h5 class="text-lg font-semibold text-gray-800">@Model.ProgressPercentage.ToString("0.0")%</h5>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <h6 class="text-base font-semibold text-gray-800 mb-3">
+                    <i class="fas fa-tasks"></i> Overall Progress
+                </h6>
+                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                    <div class="h-full @(Model.ProgressPercentage >= 100 ? "bg-green-600" : Model.ProgressPercentage >= 50 ? "bg-blue-600" : "bg-yellow-500") flex items-center justify-center text-white font-semibold text-sm transition-all duration-300" 
+                         style="width: @Model.ProgressPercentage%">
+                        @Model.CompletedQuantity / @Model.Order.Quantity (@Model.ProgressPercentage.ToString("0.0")%)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details & Timeline Side by Side -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Order Details -->
+                <div>
+                    <h6 class="text-base font-semibold text-gray-800 mb-3">
+                        <i class="bi bi-info-circle"></i> Order Details
+                    </h6>
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <table class="w-full">
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="py-2 text-sm font-medium text-gray-600">Order Number</td>
+                                    <td class="py-2 text-sm font-semibold text-gray-800 text-right">@Model.Order.OrderNumber</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-sm font-medium text-gray-600">Status</td>
+                                    <td class="py-2 text-right">
+                                        @if (Model.Order.Status == "Draft")
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Draft</span>
+                                        }
+                                        else if (Model.Order.Status == "Released")
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Released</span>
+                                        }
+                                        else if (Model.Order.Status == "InProgress")
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">In Progress</span>
+                                        }
+                                        else if (Model.Order.Status == "Completed")
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                        }
+                                        else if (Model.Order.Status == "Cancelled")
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-sm font-medium text-gray-600">Created By</td>
+                                    <td class="py-2 text-sm text-gray-800 text-right">@Model.Order.CreatedByUserName <br/><span class="text-xs text-gray-500">on @Model.Order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.Order.Notes))
+                                {
+                                    <tr>
+                                        <td class="py-2 text-sm font-medium text-gray-600">Notes</td>
+                                        <td class="py-2 text-sm text-gray-800 text-right">@Model.Order.Notes</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div>
+                    <h6 class="text-base font-semibold text-gray-800 mb-3">Timeline</h6>
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Planned</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actual</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-gray-700">Start Date</td>
+                                    <td class="px-4 py-3 text-gray-700">@Model.Order.PlannedStartDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="px-4 py-3 text-gray-700">
+                                        @if (Model.Order.ActualStartDate.HasValue)
+                                        {
+                                            @Model.Order.ActualStartDate.Value.ToString("dd/MM/yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-500 italic">Not started</span>
+                                        }
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if (Model.Order.ActualStartDate.HasValue)
+                                        {
+                                            if (Model.Order.ActualStartDate.Value <= Model.Order.PlannedStartDate)
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">On Time</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Delayed</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Pending</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-gray-700">End Date</td>
+                                    <td class="px-4 py-3 text-gray-700">@Model.Order.PlannedEndDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="px-4 py-3 text-gray-700">
+                                        @if (Model.Order.ActualEndDate.HasValue)
+                                        {
+                                            @Model.Order.ActualEndDate.Value.ToString("dd/MM/yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-500 italic">In progress</span>
+                                        }
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if (Model.Order.ActualEndDate.HasValue)
+                                        {
+                                            if (Model.Order.ActualEndDate.Value <= Model.Order.PlannedEndDate)
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">On Time</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Delayed</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">In Progress</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Processes -->
+            @if (Model.Processes != null && Model.Processes.Any())
+            {
+                <div class="mb-6">
+                    <h6 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="bi bi-gear"></i> Production Processes
+                    </h6>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Sequence</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Work Code</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Work Name</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">No. of Persons</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Notes</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach (var process in Model.Processes)
+                                {
+                                    <tr>
+                                        <td class="px-4 py-3 text-center text-gray-700">@process.Sequence</td>
+                                        <td class="px-4 py-3 text-gray-700 font-medium">@process.WorkCode</td>
+                                        <td class="px-4 py-3 text-gray-700">@process.WorkName</td>
+                                        <td class="px-4 py-3 text-center text-gray-700">@process.NumberOfPersons.ToString("N0")</td>
+                                        <td class="px-4 py-3 text-right text-gray-700">@process.Quantity.ToString("N2") @process.UnitOfMeasure</td>
+                                        <td class="px-4 py-3 text-center">
+                                            @if (process.Status == "Completed")
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                            }
+                                            else if (process.Status == "InProgress")
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">In Progress</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Pending</span>
+                                            }
+                                        </td>
+                                        <td class="px-4 py-3 text-gray-500 text-sm">@process.Notes</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button type="button" 
+                                                    onclick="openProcessModal(@process.Id, '@process.WorkCode', '@process.Status', '@(process.Notes?.Replace("'", "\\'"))')"
+                                                    class="text-blue-600 hover:text-blue-800">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            <!-- Quality Control Steps -->
+            @if (Model.QcSteps != null && Model.QcSteps.Any())
+            {
+                <div class="mb-6">
+                    <h6 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="bi bi-clipboard-check"></i> Quality Control Steps
+                    </h6>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Sequence</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">QC Code</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">QC Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check Values</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actual Values</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Notes</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach (var qc in Model.QcSteps)
+                                {
+                                    <tr class="@(qc.Status == "InProgress" ? "bg-blue-50" : "")">
+                                        <td class="px-4 py-3 text-center text-gray-700">@qc.Sequence</td>
+                                        <td class="px-4 py-3 text-gray-700 font-medium">@qc.QcCode</td>
+                                        <td class="px-4 py-3 text-gray-700">@qc.QcName</td>
+                                        <td class="px-4 py-3 text-gray-600 text-sm">@qc.QcValues</td>
+                                        <td class="px-4 py-3 text-center">
+                                            @if (qc.Status == "Passed")
+                                            {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    <i class="bi bi-check-circle"></i> Passed
+                                                </span>
+                                            }
+                                            else if (qc.Status == "Failed")
+                                            {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    <i class="bi bi-x-circle"></i> Failed
+                                                </span>
+                                            }
+                                            else if (qc.Status == "InProgress")
+                                            {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    <i class="bi bi-arrow-right-circle"></i> Checking
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
+                                                    <i class="bi bi-circle"></i> Pending
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="px-4 py-3 text-gray-600 text-sm">@qc.ActualValues</td>
+                                        <td class="px-4 py-3 text-gray-500 text-sm">@qc.Notes</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button type="button" 
+                                                    onclick="openQcModal(@qc.Id, '@qc.QcCode', '@qc.Status', '@(qc.ActualValues?.Replace("'", "\\'"))', '@(qc.Notes?.Replace("'", "\\'"))')"
+                                                    class="text-blue-600 hover:text-blue-800">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Process Modal -->
+<div id="processModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Update Process Status</h3>
+            <form method="post" asp-page-handler="UpdateProcess">
+                <input type="hidden" id="processId" name="processId" />
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Process</label>
+                    <input type="text" id="processWorkCode" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select name="status" id="processStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="Pending">Pending</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea name="notes" id="processNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeProcessModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- QC Modal -->
+<div id="qcModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Update QC Status</h3>
+            <form method="post" asp-page-handler="UpdateQc">
+                <input type="hidden" id="qcId" name="qcId" />
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">QC Code</label>
+                    <input type="text" id="qcCode" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select name="status" id="qcStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="Pending">Pending</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Passed">Passed</option>
+                        <option value="Failed">Failed</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Actual Values</label>
+                    <input type="text" name="actualValues" id="qcActualValues" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea name="notes" id="qcNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeQcModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openProcessModal(id, workCode, status, notes) {
+        document.getElementById('processId').value = id;
+        document.getElementById('processWorkCode').value = workCode;
+        document.getElementById('processStatus').value = status || 'Pending';
+        document.getElementById('processNotes').value = notes || '';
+        document.getElementById('processModal').classList.remove('hidden');
+    }
+
+    function closeProcessModal() {
+        document.getElementById('processModal').classList.add('hidden');
+    }
+
+    function openQcModal(id, qcCode, status, actualValues, notes) {
+        document.getElementById('qcId').value = id;
+        document.getElementById('qcCode').value = qcCode;
+        document.getElementById('qcStatus').value = status || 'Pending';
+        document.getElementById('qcActualValues').value = actualValues || '';
+        document.getElementById('qcNotes').value = notes || '';
+        document.getElementById('qcModal').classList.remove('hidden');
+    }
+
+    function closeQcModal() {
+        document.getElementById('qcModal').classList.add('hidden');
+    }
+</script>

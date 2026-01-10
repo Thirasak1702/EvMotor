@@ -1,0 +1,53 @@
+@page
+@model EbikeRental.Web.Pages.Purchasing.GR.TestPostModel
+@{
+    ViewData["Title"] = "Test GR Post";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h1 class="text-3xl font-bold mb-6 text-center">
+                ?? Test GR Post
+            </h1>
+
+            <div class="mb-8 p-6 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <h2 class="font-bold text-lg mb-2">Usage:</h2>
+                <code class="text-sm">
+                    /Purchasing/GR/TestPost?id=<span class="text-red-600">[GR_ID]</span>
+                </code>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                var isSuccess = Model.Message.StartsWith("?");
+                var bgClass = isSuccess ? "bg-green-50 border-green-500" : "bg-red-50 border-red-500";
+                var textClass = isSuccess ? "text-green-800" : "text-red-800";
+
+                <div class="p-6 @bgClass rounded-lg border-l-4 mb-4">
+                    <pre class="@textClass whitespace-pre-wrap font-mono text-sm">@Model.Message</pre>
+                </div>
+            }
+
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-bold mb-2">?? Quick SQL Query:</h3>
+                <code class="text-xs block bg-gray-800 text-green-400 p-3 rounded">
+-- Get latest GR<br/>
+SELECT TOP 1 Id, DocumentNumber, Status, CreatedAt<br/>
+FROM GoodsReceipts<br/>
+ORDER BY CreatedAt DESC;<br/>
+<br/>
+-- Check stock after post<br/>
+SELECT * FROM StockBalances;<br/>
+SELECT * FROM InventoryTransactions;<br/>
+                </code>
+            </div>
+
+            <div class="mt-6 text-center">
+                <a asp-page="Index" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition">
+                    ? Back to GR Index
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

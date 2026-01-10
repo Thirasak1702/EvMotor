@@ -1,0 +1,84 @@
+@* 
+    Shared Filter Card Container for List Pages
+    Usage: Place this before your table
+    
+    Example:
+    @{
+        var filterFields = new List<(string Label, string Name, string Type, string Value, object Options)>
+        {
+            ("Code", "code", "text", Model.Code, null),
+            ("Name", "name", "text", Model.Name, null),
+            ("Status", "isActive", "select", Model.IsActive?.ToString(), new[] { ("", "All"), ("true", "Active"), ("false", "Inactive") })
+        };
+        ViewData["FilterFields"] = filterFields;
+    }
+    <partial name="_FilterCard" />
+*@
+
+@{
+    var filterFields = ViewData["FilterFields"] as List<(string Label, string Name, string Type, string Value, object Options)> 
+        ?? new List<(string Label, string Name, string Type, string Value, object Options)>();
+    
+    var showFilter = ViewData["ShowFilter"] as bool? ?? true;
+}
+
+@if (showFilter && filterFields.Any())
+{
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="true">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="collapse show" id="filterCollapse">
+            <div class="card-body">
+                <form method="get">
+                    <div class="row g-3">
+                        @foreach (var field in filterFields)
+                        {
+                            <div class="col-md-3">
+                                <label class="form-label">@field.Label</label>
+                                @if (field.Type == "text")
+                                {
+                                    <input type="text" class="form-control" name="@field.Name" value="@field.Value" placeholder="Search by @field.Label.ToLower()..." />
+                                }
+                                else if (field.Type == "select" && field.Options != null)
+                                {
+                                    <select class="form-select" name="@field.Name">
+                                        @{
+                                            var options = field.Options as IEnumerable<(string Value, string Text)>;
+                                            if (options != null)
+                                            {
+                                                foreach (var option in options)
+                                                {
+                                                    <option value="@option.Value" selected="@(field.Value == option.Value)">@option.Text</option>
+                                                }
+                                            }
+                                        }
+                                    </select>
+                                }
+                                else if (field.Type == "date")
+                                {
+                                    <input type="date" class="form-control" name="@field.Name" value="@field.Value" />
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                            <a href="@Context.Request.Path" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

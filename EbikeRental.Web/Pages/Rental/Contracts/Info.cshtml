@@ -1,0 +1,100 @@
+@page
+@model EbikeRental.Web.Pages.Rental.Contracts.InfoModel
+@{
+    ViewData["Title"] = Model.Rental.Id == 0 ? "New Rental Contract" : "Rental Contract Details";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Rental.Id" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Rental.CustomerName" class="form-label">Customer Name</label>
+                                <input asp-for="Rental.CustomerName" class="form-control" />
+                                <span asp-validation-for="Rental.CustomerName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Rental.CustomerPhone" class="form-label">Phone Number</label>
+                                <input asp-for="Rental.CustomerPhone" class="form-control" />
+                                <span asp-validation-for="Rental.CustomerPhone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rental.CustomerEmail" class="form-label">Email</label>
+                            <input asp-for="Rental.CustomerEmail" class="form-control" type="email" />
+                            <span asp-validation-for="Rental.CustomerEmail" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rental.CustomerAddress" class="form-label">Address</label>
+                            <textarea asp-for="Rental.CustomerAddress" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Rental.CustomerAddress" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Rental.AssetId" class="form-label">Asset (Bike)</label>
+                                <select asp-for="Rental.AssetId" asp-items="Model.AssetList" class="form-select">
+                                    <option value="">-- Select Asset --</option>
+                                </select>
+                                <span asp-validation-for="Rental.AssetId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Rental.DailyRate" class="form-label">Daily Rate</label>
+                                <input asp-for="Rental.DailyRate" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="Rental.DailyRate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Rental.RentalStartDate" class="form-label">Start Date</label>
+                                <input asp-for="Rental.RentalStartDate" class="form-control" type="date" />
+                                <span asp-validation-for="Rental.RentalStartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Rental.RentalEndDate" class="form-label">End Date</label>
+                                <input asp-for="Rental.RentalEndDate" class="form-control" type="date" />
+                                <span asp-validation-for="Rental.RentalEndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Rental.DepositAmount" class="form-label">Deposit Amount</label>
+                                <input asp-for="Rental.DepositAmount" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="Rental.DepositAmount" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Rental.TotalAmount" class="form-label">Total Amount</label>
+                                <input asp-for="Rental.TotalAmount" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="Rental.TotalAmount" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rental.Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Rental.Notes" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Rental.Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Contract</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

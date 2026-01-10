@@ -1,0 +1,968 @@
+﻿@page
+@model EbikeRental.Web.Pages.Production.ProductionOrders.InfoModel
+@{
+    ViewData["Title"] = Model.Order.Id == 0 ? "New Production Order" : "Edit Production Order";
+    ViewData["FormTitle"] = ViewData["Title"];
+    ViewData["FormIcon"] = "bi-gear-fill";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+    <div asp-validation-summary="All" class="text-red-600 mb-4 text-sm"></div>
+    <input type="hidden" asp-for="Order.Id" />
+
+    <!-- Header Section: Order Number + Status -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label asp-for="Order.OrderNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-hash mr-1"></i>
+                Order Number
+            </label>
+            @if (Model.Order.Id == 0)
+            {
+                <input asp-for="Order.OrderNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Auto-generated" value="Auto-generated" readonly />
+                <span class="text-xs text-gray-500 mt-1 block">
+                    <i class="bi bi-magic mr-1"></i>Will be auto-generated when saved
+                </span>
+            }
+            else
+            {
+                <input asp-for="Order.OrderNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+            }
+            <span asp-validation-for="Order.OrderNumber" class="text-red-600 text-sm mt-1 block"></span>
+        </div>
+        <div>
+            <label asp-for="Order.Status" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-flag mr-1"></i>
+                Status
+            </label>
+            <select asp-for="Order.Status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="Draft">📝 Draft</option>
+                <option value="Released">🚀 Released</option>
+                <option value="InProgress">⚙️ In Progress</option>
+                <option value="Completed">✅ Completed</option>
+                <option value="Cancelled">❌ Cancelled</option>
+            </select>
+            <span asp-validation-for="Order.Status" class="text-red-600 text-sm mt-1 block"></span>
+        </div>
+    </div>
+
+    <!-- BOM + Product Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+            <label asp-for="Order.ItemId" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-hammer mr-1"></i>
+                Product to Manufacture <span class="text-red-600">*</span>
+            </label>
+            <select asp-for="Order.ItemId" id="itemIdSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Select Product --</option>
+                @foreach (var item in Model.Items)
+                {
+                    <option value="@item.Id">@item.Code - @item.Name</option>
+                }
+            </select>
+            <span asp-validation-for="Order.ItemId" class="text-red-600 text-sm mt-1 block"></span>
+            <p class="text-xs text-gray-500 mt-1">
+                <i class="bi bi-info-circle mr-1"></i>
+                Filters BOM list or auto-filled by BOM
+            </p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-box-seam mr-1"></i>
+                Bill of Materials (BOM) <span class="text-red-600">*</span>
+            </label>
+            <select id="bomDropdown" asp-for="Order.BomCode" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Select BOM --</option>
+                @foreach (var bom in Model.Boms)
+                {
+                    <option value="@bom.BomCode" data-bom-id="@bom.Id" data-bom-name="@bom.BomCode - @bom.Description" data-parent-item-id="@bom.ParentItemId">
+                        @bom.BomCode - @bom.Description
+                    </option>
+                }
+            </select>
+            <input type="hidden" asp-for="Order.BillOfMaterialId" id="billOfMaterialId" />
+            <input type="hidden" asp-for="Order.BomName" id="bomNameHidden" />
+            <span asp-validation-for="Order.BomCode" class="text-red-600 text-sm mt-1 block"></span>
+            <p class="text-xs text-gray-500 mt-1">
+                <i class="bi bi-info-circle mr-1"></i>
+                Select BOM to auto-fill product and materials
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+            <label asp-for="Order.Quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-123 mr-1"></i>
+                Production Quantity <span class="text-red-600">*</span>
+            </label>
+            <input asp-for="Order.Quantity" id="quantityInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="number" min="1" />
+            <span asp-validation-for="Order.Quantity" class="text-red-600 text-sm mt-1 block"></span>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-lightbulb mr-1"></i>
+                Quick Info
+            </label>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800">
+                <i class="bi bi-info-circle mr-1"></i>
+                Quantity will auto-calculate material requirements
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label asp-for="Order.PlannedStartDate" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-calendar-event mr-1"></i>
+                Planned Start Date
+            </label>
+            <input asp-for="Order.PlannedStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="date" />
+            <span asp-validation-for="Order.PlannedStartDate" class="text-red-600 text-sm mt-1 block"></span>
+        </div>
+        <div>
+            <label asp-for="Order.PlannedEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="bi bi-calendar-check mr-1"></i>
+                Planned End Date
+            </label>
+            <input asp-for="Order.PlannedEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="date" />
+            <span asp-validation-for="Order.PlannedEndDate" class="text-red-600 text-sm mt-1 block"></span>
+        </div>
+    </div>
+
+    @if (Model.Order.Id > 0)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="Order.ActualStartDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-calendar-event mr-1"></i>
+                    Actual Start Date
+                </label>
+                <input asp-for="Order.ActualStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="date" />
+                <span asp-validation-for="Order.ActualStartDate" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+            <div>
+                <label asp-for="Order.ActualEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-calendar-check mr-1"></i>
+                    Actual End Date
+                </label>
+                <input asp-for="Order.ActualEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" type="date" />
+                <span asp-validation-for="Order.ActualEndDate" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+        </div>
+    }
+
+    <div class="mb-6">
+        <label asp-for="Order.Notes" class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-card-text mr-1"></i>
+            Notes
+        </label>
+        <textarea asp-for="Order.Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Additional notes or comments..."></textarea>
+        <span asp-validation-for="Order.Notes" class="text-red-600 text-sm mt-1 block"></span>
+    </div>
+
+    @* BOM Items (Materials, Processes, QC Steps) - Always visible *@
+    <div class="mb-6" id="bomPreviewContainer">
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200 mb-4">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button type="button"
+                        onclick="showBomPreviewTab('materials')"
+                        id="bom-tab-btn-materials"
+                        class="bom-tab-button active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                    <i class="bi bi-list-ul mr-2"></i>
+                    Materials
+                </button>
+                <button type="button"
+                        onclick="showBomPreviewTab('processes')"
+                        id="bom-tab-btn-processes"
+                        class="bom-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="bi bi-gear mr-2"></i>
+                    Processes
+                </button>
+                <button type="button"
+                        onclick="showBomPreviewTab('qc')"
+                        id="bom-tab-btn-qc"
+                        class="bom-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="bi bi-check-circle mr-2"></i>
+                    QC Steps
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content: Materials (Editable) -->
+        <div id="bom-tab-content-materials" class="bom-tab-content">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Order Materials</span>
+                </h5>
+                <button type="button"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onclick="addOrderItemRow()">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Component</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-700">
+                        <tr>
+                            <th class="px-3 py-2 text-left w-[5%]">#</th>
+                            <th class="px-3 py-2 text-left w-[25%]">Component Item</th>
+                            <th class="px-3 py-2 text-left w-[15%]">Quantity</th>
+                            <th class="px-3 py-2 text-left w-[10%]">UOM</th>
+                            <th class="px-3 py-2 text-left w-[30%]">Notes</th>
+                            <th class="px-3 py-2 text-left w-[15%]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderItemsBody" class="divide-y divide-gray-200 bg-white">
+                        @* Rows will be populated by JavaScript or server-side for existing orders *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: Processes -->
+        <div id="bom-tab-content-processes" class="bom-tab-content hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="bi bi-gear"></i>
+                    <span>Order Processes</span>
+                </h5>
+                <button type="button"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onclick="addBomProcessRow()">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add Process</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-700">
+                        <tr>
+                            <th class="px-3 py-2 text-left w-[5%]">#</th>
+                            <th class="px-3 py-2 text-left w-[20%]">Work Code</th>
+                            <th class="px-3 py-2 text-left w-[20%]">Work Name</th>
+                            <th class="px-3 py-2 text-left w-[10%]">No. of Persons</th>
+                            <th class="px-3 py-2 text-left w-[10%]">Quantity</th>
+                            <th class="px-3 py-2 text-left w-[10%]">UOM</th>
+                            <th class="px-3 py-2 text-left w-[20%]">Notes</th>
+                            <th class="px-3 py-2 text-left w-[5%]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bomProcessesTableBody" class="divide-y divide-gray-200 bg-white">
+                        @* Rows will be populated by JavaScript or server-side for existing orders *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: QC Steps -->
+        <div id="bom-tab-content-qc" class="bom-tab-content hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="mb-0 text-base font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Order QC Steps</span>
+                </h5>
+                <button type="button"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        onclick="addBomQcRow()">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Add QC Step</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-700">
+                        <tr>
+                            <th class="px-3 py-2 text-left w-[5%]">#</th>
+                            <th class="px-3 py-2 text-left w-[20%]">QC Code</th>
+                            <th class="px-3 py-2 text-left w-[25%]">QC Name</th>
+                            <th class="px-3 py-2 text-left w-[30%]">QC Values</th>
+                            <th class="px-3 py-2 text-left w-[15%]">Notes</th>
+                            <th class="px-3 py-2 text-left w-[5%]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bomQcsTableBody" class="divide-y divide-gray-200 bg-white">
+                        @* Rows will be populated by JavaScript or server-side for existing orders *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Force camelCase JSON so JS can use item.id/item.code/item.name safely.
+        let itemsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Items,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+        ));
+
+        // Serialize existing order items for editing
+        let existingOrderItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Order.Items,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+        ));
+
+        // Store current BOM data for quantity updates (global scope)
+        let currentBomData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const bomDropdown = document.getElementById('bomDropdown');
+            const billOfMaterialId = document.getElementById('billOfMaterialId');
+            const bomNameHidden = document.getElementById('bomNameHidden');
+            const itemIdSelect = document.getElementById('itemIdSelect');
+            const quantityInput = document.getElementById('quantityInput');
+
+            // Store all BOM options for filtering
+            const allBomOptions = Array.from(bomDropdown.options).slice(1); // Skip first option
+
+            // Show tabs by default on page load
+            window.showBomPreviewTab('materials');
+
+            // Load existing order items if editing
+            if (existingOrderItems && existingOrderItems.length > 0) {
+                loadExistingOrderItems(existingOrderItems);
+            }
+
+            // ===========================================
+            // Product Selection Change → Filter BOM
+            // ===========================================
+            if (itemIdSelect) {
+                itemIdSelect.addEventListener('change', function() {
+                    const selectedItemId = this.value;
+                    
+                    if (!selectedItemId) {
+                        // If no product selected, show all BOMs
+                        resetBomDropdown();
+                        return;
+                    }
+
+                    // Filter BOM dropdown to show only BOMs with matching ParentItemId
+                    filterBomByProduct(selectedItemId);
+                });
+            }
+
+            // ===========================================
+            // BOM Selection Change → Load BOM + Auto-fill Product
+            // ===========================================
+            if (bomDropdown) {
+                bomDropdown.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const bomCode = this.value;
+
+                    if (!bomCode) {
+                        clearBom();
+                        return;
+                    }
+
+                    // Get BOM data attributes
+                    const bomId = selectedOption.getAttribute('data-bom-id');
+                    const bomName = selectedOption.getAttribute('data-bom-name');
+                    const parentItemId = selectedOption.getAttribute('data-parent-item-id');
+
+                    // Set hidden fields
+                    if (billOfMaterialId) billOfMaterialId.value = bomId || '';
+                    if (bomNameHidden) bomNameHidden.value = bomName || '';
+
+                    // Auto-fill Product to Manufacture
+                    if (parentItemId && itemIdSelect) {
+                        itemIdSelect.value = parentItemId;
+                        console.log('Auto-filled Product:', parentItemId);
+                    }
+
+                    // Load BOM details via AJAX
+                    loadBomByCode(bomCode);
+                });
+            }
+
+            // Filter BOM dropdown based on selected product
+            function filterBomByProduct(productId) {
+                // Clear current options (except first)
+                while (bomDropdown.options.length > 1) {
+                    bomDropdown.remove(1);
+                }
+
+                // Add filtered options
+                let hasOptions = false;
+                allBomOptions.forEach(option => {
+                    const parentItemId = option.getAttribute('data-parent-item-id');
+                    if (parentItemId === productId) {
+                        bomDropdown.add(option.cloneNode(true));
+                        hasOptions = true;
+                    }
+                });
+
+                if (!hasOptions) {
+                    const noOption = document.createElement('option');
+                    noOption.value = '';
+                    noOption.text = '-- No BOM found for this product --';
+                    noOption.disabled = true;
+                    bomDropdown.add(noOption);
+                }
+
+                console.log(`Filtered BOMs for Product ID: ${productId}`);
+            }
+
+            // Reset BOM dropdown to show all options
+            function resetBomDropdown() {
+                // Clear current options (except first)
+                while (bomDropdown.options.length > 1) {
+                    bomDropdown.remove(1);
+                }
+
+                // Re-add all options
+                allBomOptions.forEach(option => {
+                    bomDropdown.add(option.cloneNode(true));
+                });
+
+                console.log('BOM dropdown reset to show all');
+            }
+
+            // Load BOM details via AJAX
+            function loadBomByCode(bomCode) {
+                if (!bomCode) {
+                    clearBom();
+                    return;
+                }
+
+                const url = `/Production/ProductionOrders/Info?handler=LoadBom&bomCode=${encodeURIComponent(bomCode)}`;
+                console.log('Loading BOM:', url);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('BOM data received:', data);
+                        if (data.success) {
+                            // Store current BOM data
+                            currentBomData = data.bom;
+                            
+                            // Display BOM Preview with Tabs
+                            displayBomPreview(data.bom);
+                        } else {
+                            console.error('BOM not found:', data.message);
+                            alert(data.message || 'BOM not found');
+                            clearBom();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading BOM:', error);
+                        alert('Error loading BOM: ' + error.message);
+                        clearBom();
+                    });
+            }
+
+            // Display BOM Preview with all tabs
+            function displayBomPreview(bom) {
+                const quantityInput = document.querySelector('input[name="Order.Quantity"]');
+                const orderQuantity = quantityInput ? parseFloat(quantityInput.value) || 1 : 1;
+
+                console.log('BOM Preview Data:', bom);
+                console.log('Processes:', bom.processes);
+                console.log('QCs:', bom.qcs);
+
+                // Display Materials (Editable)
+                displayBomMaterials(bom.items || [], orderQuantity);
+
+                // Display Processes (Editable)
+                displayBomProcesses(bom.processes || []);
+
+                // Display QC Steps (Editable)
+                displayBomQcs(bom.qcs || []);
+
+                // Activate the first tab by default
+                window.showBomPreviewTab('materials');
+            }
+
+            // Display BOM Materials (Editable)
+            function displayBomMaterials(bomItems, orderQuantity) {
+                const tableBody = document.getElementById('orderItemsBody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+
+                if (bomItems && bomItems.length > 0) {
+                    const sortedItems = bomItems.sort((a, b) => a.sequence - b.sequence);
+
+                    sortedItems.forEach((item, index) => {
+                        const orderQty = (item.quantity * orderQuantity);
+                        
+                        let itemOptions = '<option value="">-- Select --</option>';
+                        itemsData.forEach(optItem => {
+                            const selected = optItem.id === item.componentItemId ? 'selected' : '';
+                            itemOptions += `<option value="${optItem.id}" ${selected}>${optItem.code} - ${optItem.name}</option>`;
+                        });
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-3 py-2 align-top">
+                                <input type="hidden" data-field-order="Id" value="0" />
+                                <input type="hidden" data-field-order="BomItemId" value="${item.id || ''}" />
+                                <input type="text" data-field-order="Sequence" value="${index + 1}" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <select data-field-order="ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                    ${itemOptions}
+                                </select>
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="number" data-field-order="Quantity" value="${orderQty.toFixed(4)}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.0001" required />
+                                <input type="hidden" data-field-order="BomQuantity" value="${item.quantity}" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-order="UnitOfMeasure" value="${item.unitOfMeasure || 'EA'}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-order="Notes" value="${item.notes || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeOrderItemRow(this)" title="Remove">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Reindex after adding rows
+                    reindexOrderItems();
+                }
+            }
+
+            // Display BOM Processes (Editable)
+            function displayBomProcesses(bomProcesses) {
+                const tableBody = document.getElementById('bomProcessesTableBody');
+                if (!tableBody) {
+                    console.error('bomProcessesTableBody not found');
+                    return;
+                }
+
+                tableBody.innerHTML = '';
+                console.log('Displaying Processes:', bomProcesses);
+
+                if (bomProcesses && bomProcesses.length > 0) {
+                    const sortedProcesses = bomProcesses.sort((a, b) => a.sequence - b.sequence);
+                    console.log('Sorted Processes:', sortedProcesses);
+
+                    sortedProcesses.forEach((process, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-3 py-2 align-top">
+                                <input type="hidden" data-field-process="Id" value="0" />
+                                <input type="text" data-field-process="Sequence" value="${index + 1}" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-process="WorkCode" value="${process.workCode || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., ASSY-001" required />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-process="WorkName" value="${process.workName || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Assembly Process" required />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="number" data-field-process="NumberOfPersons" value="${process.numberOfPersons || 1}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" min="0" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="number" data-field-process="Quantity" value="${process.quantity ? process.quantity.toFixed(4) : '1.0000'}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.0001" min="0" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-process="UnitOfMeasure" value="${process.unitOfMeasure || 'Hour'}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Hour" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-process="Notes" value="${process.notes || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeBomProcessRow(this)" title="Remove">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    console.log(`Added ${sortedProcesses.length} process rows`);
+                    
+                    // Reindex after adding rows
+                    reindexBomProcesses();
+                } else {
+                    console.log('No processes to display');
+                }
+            }
+
+            // Display BOM QC Steps (Editable)
+            function displayBomQcs(bomQcs) {
+                const tableBody = document.getElementById('bomQcsTableBody');
+                if (!tableBody) {
+                    console.error('bomQcsTableBody not found');
+                    return;
+                }
+
+                tableBody.innerHTML = '';
+                console.log('Displaying QCs:', bomQcs);
+
+                if (bomQcs && bomQcs.length > 0) {
+                    const sortedQcs = bomQcs.sort((a, b) => a.sequence - b.sequence);
+                    console.log('Sorted QCs:', sortedQcs);
+
+                    sortedQcs.forEach((qc, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-3 py-2 align-top">
+                                <input type="hidden" data-field-qc="Id" value="0" />
+                                <input type="text" data-field-qc="Sequence" value="${index + 1}" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-qc="QcCode" value="${qc.qcCode || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., QC-001" required />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-qc="QcName" value="${qc.qcName || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Visual Inspection" required />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-qc="QcValues" value="${qc.qcValues || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Temperature: 20-25°C" required />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <input type="text" data-field-qc="Notes" value="${qc.notes || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </td>
+                            <td class="px-3 py-2 align-top">
+                                <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeBomQcRow(this)" title="Remove">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    console.log(`Added ${sortedQcs.length} QC rows`);
+                    
+                    // Reindex after adding rows
+                    reindexBomQcs();
+                } else {
+                    console.log('No QCs to display');
+                }
+            }
+
+            // Update order items when quantity changes (recalculate quantities)
+            if (quantityInput) {
+                quantityInput.addEventListener('input', function() {
+                    if (currentBomData) {
+                        const orderQuantity = parseFloat(quantityInput.value) || 1;
+                        // Update quantities in existing rows based on BOM Quantity
+                        const rows = document.querySelectorAll('#orderItemsBody tr');
+                        rows.forEach(row => {
+                            const bomQtyInput = row.querySelector('[data-field-order="BomQuantity"]');
+                            const qtyInput = row.querySelector('[data-field-order="Quantity"]');
+                            if (bomQtyInput && qtyInput) {
+                                const bomQty = parseFloat(bomQtyInput.value) || 0;
+                                qtyInput.value = (bomQty * orderQuantity).toFixed(4);
+                            }
+                        });
+                    }
+                });
+            }
+
+            function clearBom() {
+                if (billOfMaterialId) billOfMaterialId.value = '';
+                if (bomNameHidden) bomNameHidden.value = '';
+                
+                currentBomData = null;
+                
+                // Clear tables
+                const orderItemsBody = document.getElementById('orderItemsBody');
+                const processesBody = document.getElementById('bomProcessesTableBody');
+                const qcsBody = document.getElementById('bomQcsTableBody');
+                if (orderItemsBody) orderItemsBody.innerHTML = '';
+                if (processesBody) processesBody.innerHTML = '';
+                if (qcsBody) qcsBody.innerHTML = '';
+            }
+
+            // Order Items Functions (Add, Remove, Reindex) - Global scope
+            window.addOrderItemRow = function() {
+                const tbody = document.getElementById('orderItemsBody');
+                if (!tbody) return;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 align-top">
+                        <input type="hidden" data-field-order="Id" value="0" />
+                        <input type="hidden" data-field-order="BomItemId" value="" />
+                        <input type="text" data-field-order="Sequence" value="0" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <select data-field-order="ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">-- Select --</option>
+                            ${itemsData.map(item => `<option value="${item.id}">${item.code} - ${item.name}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="number" data-field-order="Quantity" value="1.0000" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.0001" required />
+                        <input type="hidden" data-field-order="BomQuantity" value="1.0000" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-order="UnitOfMeasure" value="EA" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-order="Notes" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeOrderItemRow(this)" title="Remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                reindexOrderItems();
+            };
+
+            window.removeOrderItemRow = function(button) {
+                const row = button.closest('tr');
+                if (row) {
+                    row.remove();
+                    reindexOrderItems();
+                }
+            };
+
+            function reindexOrderItems() {
+                const rows = document.querySelectorAll('#orderItemsBody tr');
+                rows.forEach((row, index) => {
+                    const sequenceInput = row.querySelector('[data-field-order="Sequence"]');
+                    if (sequenceInput) {
+                        sequenceInput.value = index + 1;
+                    }
+                });
+            }
+
+            // Load existing order items for editing
+            function loadExistingOrderItems(items) {
+                const tbody = document.getElementById('orderItemsBody');
+                if (!tbody || !items || items.length === 0) return;
+
+                tbody.innerHTML = ''; // Clear any existing rows
+
+                items.forEach((item, index) => {
+                    let itemOptions = '<option value="">-- Select --</option>';
+                    itemsData.forEach(optItem => {
+                        const selected = optItem.id === item.itemId ? 'selected' : '';
+                        itemOptions += `<option value="${optItem.id}" ${selected}>${optItem.code} - ${optItem.name}</option>`;
+                    });
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-3 py-2 align-top">
+                            <input type="hidden" data-field-order="Id" value="${item.id || 0}" />
+                            <input type="hidden" data-field-order="BomItemId" value="${item.bomItemId || ''}" />
+                            <input type="text" data-field-order="Sequence" value="${item.sequence || (index + 1)}" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                            <select data-field-order="ItemId" class="w-full px-2 py-1 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                ${itemOptions}
+                            </select>
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                            <input type="number" data-field-order="Quantity" value="${item.quantity.toFixed(4)}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.0001" required />
+                            <input type="hidden" data-field-order="BomQuantity" value="${item.bomQuantity || item.quantity}" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                            <input type="text" data-field-order="UnitOfMeasure" value="${item.unitOfMeasure || 'EA'}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                            <input type="text" data-field-order="Notes" value="${item.notes || ''}" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                            <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeOrderItemRow(this)" title="Remove">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                reindexOrderItems();
+            }
+
+            // BOM Processes Functions (Add, Remove, Reindex) - Global scope
+            window.addBomProcessRow = function() {
+                const tbody = document.getElementById('bomProcessesTableBody');
+                if (!tbody) return;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 align-top">
+                        <input type="hidden" data-field-process="Id" value="0" />
+                        <input type="text" data-field-process="Sequence" value="0" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-process="WorkCode" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., ASSY-001" required />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-process="WorkName" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Assembly Process" required />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="number" data-field-process="NumberOfPersons" value="1" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" min="0" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="number" data-field-process="Quantity" value="1.0000" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.0001" min="0" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-process="UnitOfMeasure" value="Hour" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Hour" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-process="Notes" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeBomProcessRow(this)" title="Remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                reindexBomProcesses();
+            };
+
+            window.removeBomProcessRow = function(button) {
+                const row = button.closest('tr');
+                if (row) {
+                    row.remove();
+                    reindexBomProcesses();
+                }
+            };
+
+            function reindexBomProcesses() {
+                const rows = document.querySelectorAll('#bomProcessesTableBody tr');
+                rows.forEach((row, index) => {
+                    const sequenceInput = row.querySelector('[data-field-process="Sequence"]');
+                    if (sequenceInput) {
+                        sequenceInput.value = index + 1;
+                    }
+                });
+            }
+
+            // BOM QC Steps Functions (Add, Remove, Reindex) - Global scope
+            window.addBomQcRow = function() {
+                const tbody = document.getElementById('bomQcsTableBody');
+                if (!tbody) return;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 align-top">
+                        <input type="hidden" data-field-qc="Id" value="0" />
+                        <input type="text" data-field-qc="Sequence" value="0" class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-qc="QcCode" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., QC-001" required />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-qc="QcName" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Visual Inspection" required />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-qc="QcValues" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Temperature: 20-25°C" required />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <input type="text" data-field-qc="Notes" value="" class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </td>
+                    <td class="px-3 py-2 align-top">
+                        <button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500" onclick="removeBomQcRow(this)" title="Remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                reindexBomQcs();
+            };
+
+            window.removeBomQcRow = function(button) {
+                const row = button.closest('tr');
+                if (row) {
+                    row.remove();
+                    reindexBomQcs();
+                }
+            };
+
+            function reindexBomQcs() {
+                const rows = document.querySelectorAll('#bomQcsTableBody tr');
+                rows.forEach((row, index) => {
+                    const sequenceInput = row.querySelector('[data-field-qc="Sequence"]');
+                    if (sequenceInput) {
+                        sequenceInput.value = index + 1;
+                    }
+                });
+            }
+        });
+
+        // Show BOM Preview Tab - Global function
+        window.showBomPreviewTab = function(tabName) {
+            document.querySelectorAll('.bom-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            document.querySelectorAll('.bom-tab-button').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            const selectedContent = document.getElementById(`bom-tab-content-${tabName}`);
+            if (selectedContent) {
+                selectedContent.classList.remove('hidden');
+            }
+
+            const selectedButton = document.getElementById(`bom-tab-btn-${tabName}`);
+            if (selectedButton) {
+                selectedButton.classList.remove('border-transparent', 'text-gray-500');
+                selectedButton.classList.add('active', 'border-blue-500', 'text-blue-600');
+            }
+        };
+
+        // Form submission handler to collect order items
+        document.getElementById('info-form').addEventListener('submit', function(e) {
+            // Remove any existing hidden inputs for Order.Items
+            const existingInputs = this.querySelectorAll('input[name^="Order.Items"]');
+            existingInputs.forEach(input => input.remove());
+
+            // Collect order items from the table
+            const orderItemsBody = document.getElementById('orderItemsBody');
+            if (orderItemsBody) {
+                const rows = orderItemsBody.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const fields = {
+                        Id: row.querySelector('[data-field-order="Id"]')?.value || '0',
+                        BomItemId: row.querySelector('[data-field-order="BomItemId"]')?.value || '',
+                        ItemId: row.querySelector('[data-field-order="ItemId"]')?.value || '',
+                        Sequence: row.querySelector('[data-field-order="Sequence"]')?.value || (index + 1),
+                        Quantity: row.querySelector('[data-field-order="Quantity"]')?.value || '0',
+                        UnitOfMeasure: row.querySelector('[data-field-order="UnitOfMeasure"]')?.value || 'EA',
+                        BomQuantity: row.querySelector('[data-field-order="BomQuantity"]')?.value || '0',
+                        Notes: row.querySelector('[data-field-order="Notes"]')?.value || ''
+                    };
+
+                    // Add hidden inputs for each field
+                    for (const [key, value] of Object.entries(fields)) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `Order.Items[${index}].${key}`;
+                        input.value = value;
+                        this.appendChild(input);
+                    }
+                });
+            }
+        });
+    </script>
+}

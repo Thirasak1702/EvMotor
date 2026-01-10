@@ -1,0 +1,343 @@
+﻿@page
+@model EbikeRental.Web.Pages.Auth.LoginModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EV Motorcycle ERP System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        electric: {
+                            50: '#e0f2fe',
+                            100: '#bae6fd',
+                            200: '#7dd3fc',
+                            300: '#38bdf8',
+                            400: '#0ea5e9',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#082f49',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .login-card {
+            animation: slideUp 0.6s ease-out;
+        }
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateX(10px);
+        }
+        .charging-animation {
+            animation: charge 2s infinite;
+        }
+        @@keyframes charge {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        .electric-bg {
+            background: 
+                linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%),
+                radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+        }
+    </style>
+</head>
+<body class="font-sans electric-bg flex items-center justify-center min-h-screen p-4 relative overflow-hidden">
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 opacity-20">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl charging-animation"></div>
+        <div class="absolute top-40 right-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl charging-animation" style="animation-delay: 0.7s;"></div>
+        <div class="absolute bottom-20 left-40 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl charging-animation" style="animation-delay: 1.4s;"></div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="w-full max-w-5xl mx-auto relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            
+            <!-- Left Side - Branding & Features -->
+            <div class="hidden lg:block text-white space-y-8">
+                <!-- Logo & Title -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform">
+                            <i class="bi bi-lightning-charge-fill text-4xl text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-4xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 text-transparent bg-clip-text">EV Motorcycle</h1>
+                            <p class="text-cyan-300 text-base font-semibold mt-1">ERP Management System</p>
+                        </div>
+                    </div>
+                    <p class="text-xl text-blue-100 leading-relaxed font-light">
+                        Complete solution for electric vehicle inventory & production management
+                    </p>
+                </div>
+
+                <!-- Features -->
+                <div class="space-y-3">
+                    <div class="feature-card flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/10">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <i class="bi bi-battery-charging text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white">Real-time Inventory</h3>
+                            <p class="text-cyan-200 text-sm leading-relaxed">Track batteries, motors, and components in real-time</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/10">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <i class="bi bi-cpu text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white">Production Control</h3>
+                            <p class="text-cyan-200 text-sm leading-relaxed">Manage assembly lines and quality control processes</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 hover:bg-white/10">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <i class="bi bi-graph-up-arrow text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white">Analytics & Insights</h3>
+                            <p class="text-cyan-200 text-sm leading-relaxed">Data-driven decisions for your EV business</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
+                    <div class="text-center">
+                        <div class="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 text-transparent bg-clip-text">50+</div>
+                        <div class="text-cyan-300 text-xs font-medium">Active Lines</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 text-transparent bg-clip-text">10K+</div>
+                        <div class="text-cyan-300 text-xs font-medium">Units/Month</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-black bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">99.9%</div>
+                        <div class="text-cyan-300 text-xs font-medium">Uptime</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Login Form -->
+            <div class="login-card">
+                <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
+                    <!-- Header -->
+                    <div class="p-8 text-white text-center relative overflow-hidden border-b border-slate-700">
+                        <div class="absolute inset-0 opacity-10">
+                            <div class="absolute inset-0" style="background-image: radial-gradient(circle, rgba(6, 182, 212, 0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
+                        </div>
+                        <div class="relative">
+                            <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-2xl">
+                                <i class="bi bi-shield-lock-fill text-4xl text-white"></i>
+                            </div>
+                            <h2 class="text-3xl font-black mb-2">Welcome Back!</h2>
+                            <p class="text-cyan-300">Sign in to access your ERP system</p>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="p-8">
+                        <form method="post">
+                            <div asp-validation-summary="ModelOnly" class="mb-5 p-3 bg-red-900/20 border-l-4 border-red-500 rounded-lg text-red-300 text-sm"></div>
+                            
+                            <!-- Email Input -->
+                            <div class="mb-5">
+                                <label asp-for="Input.Email" class="block text-sm font-bold text-gray-200 mb-2">
+                                    <i class="bi bi-envelope-fill mr-2 text-cyan-400"></i>Email Address
+                                </label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="bi bi-envelope text-gray-400 group-focus-within:text-cyan-400 transition"></i>
+                                    </div>
+                                    <input asp-for="Input.Email" 
+                                           class="w-full pl-10 pr-4 py-3 bg-slate-700 border-2 border-slate-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition font-medium placeholder-gray-400" 
+                                           placeholder="name@company.com"
+                                           autocomplete="email" />
+                                </div>
+                                <span asp-validation-for="Input.Email" class="text-red-400 text-xs mt-1 block"></span>
+                            </div>
+                            
+                            <!-- Password Input -->
+                            <div class="mb-5">
+                                <label asp-for="Input.Password" class="block text-sm font-bold text-gray-200 mb-2">
+                                    <i class="bi bi-lock-fill mr-2 text-cyan-400"></i>Password
+                                </label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="bi bi-lock text-gray-400 group-focus-within:text-cyan-400 transition"></i>
+                                    </div>
+                                    <input asp-for="Input.Password" 
+                                           type="password"
+                                           id="passwordInput"
+                                           class="w-full pl-10 pr-12 py-3 bg-slate-700 border-2 border-slate-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition font-medium placeholder-gray-400" 
+                                           placeholder="Enter your password"
+                                           autocomplete="current-password" />
+                                    <button type="button" 
+                                            onclick="togglePassword()" 
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-cyan-400 transition">
+                                        <i class="bi bi-eye text-lg" id="toggleIcon"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Input.Password" class="text-red-400 text-xs mt-1 block"></span>
+                            </div>
+
+                            <!-- Remember Me & Forgot Password -->
+                            <div class="flex items-center justify-between mb-6">
+                                <label class="flex items-center cursor-pointer group">
+                                    <input type="checkbox" class="w-4 h-4 text-cyan-600 border-slate-700 bg-slate-800 rounded focus:ring-cyan-500 cursor-pointer">
+                                    <span class="ml-2 text-sm font-semibold text-gray-300 group-hover:text-cyan-400 transition">Remember me</span>
+                                </label>
+                                <a href="#" onclick="showForgotPassword(); return false;" class="text-sm text-cyan-400 hover:text-cyan-300 font-bold transition">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                            
+                            <!-- Login Button -->
+                            <button type="submit" 
+                                    class="w-full bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:from-cyan-600 hover:via-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl shadow-lg flex items-center justify-center space-x-2 group">
+                                <i class="bi bi-box-arrow-in-right text-xl"></i>
+                                <span>Sign In</span>
+                            </button>
+
+                            <!-- Divider -->
+                            <div class="relative my-6">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-slate-700"></div>
+                                </div>
+                                <div class="relative flex justify-center text-sm">
+                                    <span class="px-3 bg-slate-800 text-gray-400 font-semibold">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <!-- Social Login Buttons (Demo) -->
+                            <div class="grid grid-cols-2 gap-3 mb-6">
+                                <button type="button" 
+                                        onclick="showComingSoon('Google')"
+                                        class="flex items-center justify-center px-4 py-3 border-2 border-slate-700 bg-slate-800 rounded-lg hover:bg-slate-700 hover:border-cyan-500 transition-all group">
+                                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    <span class="text-sm font-bold text-gray-300 group-hover:text-cyan-400">Google</span>
+                                </button>
+                                <button type="button" 
+                                        onclick="showComingSoon('Microsoft')"
+                                        class="flex items-center justify-center px-4 py-3 border-2 border-slate-700 bg-slate-800 rounded-lg hover:bg-slate-700 hover:border-cyan-500 transition-all group">
+                                    <svg class="w-5 h-5 mr-2" viewBox="0 0 23 23">
+                                        <path fill="#f35325" d="M0 0h11v11H0z"/>
+                                        <path fill="#81bc06" d="M12 0h11v11H12z"/>
+                                        <path fill="#05a6f0" d="M0 12h11v11H0z"/>
+                                        <path fill="#ffba08" d="M12 12h11v11H12z"/>
+                                    </svg>
+                                    <span class="text-sm font-bold text-gray-300 group-hover:text-cyan-400">Microsoft</span>
+                                </button>
+                            </div>
+
+                            <!-- Register Link -->
+                            <div class="text-center text-sm text-gray-400 font-medium">
+                                Don't have an account? 
+                                <a href="#" onclick="showRegister(); return false;" class="text-cyan-400 hover:text-cyan-300 font-black transition">
+                                    Sign up now →
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-slate-900/50 px-8 py-4 text-center border-t border-slate-700">
+                        <p class="text-xs text-gray-400 font-semibold flex items-center justify-center gap-2">
+                            <i class="bi bi-shield-fill-check text-cyan-500"></i>
+                            Protected by enterprise-grade security
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Mobile Branding -->
+                <div class="lg:hidden mt-8 text-center text-white">
+                    <p class="text-sm text-cyan-300 font-medium">&copy; 2025 EV Motorcycle ERP. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        function showComingSoon(provider) {
+            alert(`${provider} login will be available soon!\n\nThis is a demo feature for presentation purposes.`);
+        }
+
+        function showForgotPassword() {
+            alert('Forgot Password feature will be available soon!\n\nFor demo purposes, please use:\nEmail: admin@company.com\nPassword: admin123');
+        }
+
+        function showRegister() {
+            alert('Registration feature will be available soon!\n\nThis is a demo feature for presentation purposes.');
+        }
+
+        setTimeout(() => {
+            const validationDiv = document.querySelector('[asp-validation-summary]');
+            if (validationDiv && validationDiv.textContent.trim()) {
+                validationDiv.style.transition = 'opacity 0.5s';
+                validationDiv.style.opacity = '0';
+                setTimeout(() => validationDiv.remove(), 500);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+@* 
+    Shared Card Container for List Pages
+    Usage: Include at the top of your list pages
+*@
+@{
+    var title = ViewData["CardTitle"] as string ?? "List";
+    var icon = ViewData["CardIcon"] as string ?? "bi-list";
+    var createPageLink = ViewData["CreatePageLink"] as string;
+    var createButtonText = ViewData["CreateButtonText"] as string ?? "New Item";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi @icon me-2"></i>@title</h2>
+    @if (!string.IsNullOrEmpty(createPageLink))
+    {
+        <a href="@createPageLink" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> @createButtonText
+        </a>
+    }
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">

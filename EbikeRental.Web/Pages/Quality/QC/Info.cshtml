@@ -1,0 +1,1085 @@
+﻿@page
+@model EbikeRental.Web.Pages.Quality.QC.InfoModel
+@{
+    ViewData["Title"] = Model.QC.Id == 0 ? "New Quality Check" : "Edit Quality Check";
+    ViewData["FormTitle"] = ViewData["Title"];
+    ViewData["FormIcon"] = "bi-clipboard-check";
+}
+
+<partial name="_FormCardLayout" />
+
+<form method="post" id="info-form">
+    <div asp-validation-summary="ModelOnly" class="text-red-600 mb-4 text-sm"></div>
+    <input type="hidden" asp-for="QC.Id" />
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Quality Check Information -->
+    <div class="mb-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-800">Quality Check Information</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="QC.DocumentNumber" class="block text-sm font-medium text-gray-700 mb-2">Document Number</label>
+                <input asp-for="QC.DocumentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500" readonly />
+            </div>
+            <div>
+                <label asp-for="QC.InspectionDate" class="block text-sm font-medium text-gray-700 mb-2">Inspection Date</label>
+                <input asp-for="QC.InspectionDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="QC.InspectionDate" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label asp-for="QC.CheckType" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-clipboard-check mr-1"></i>Check Type <span class="text-red-600">*</span>
+                </label>
+                <select asp-for="QC.CheckType" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" asp-items="Html.GetEnumSelectList<EbikeRental.Domain.Enums.QualityCheckType>()" id="checkTypeSelect">
+                    <option value="">-- Select Type --</option>
+                </select>
+                <span asp-validation-for="QC.CheckType" class="text-red-600 text-sm mt-1 block"></span>
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="bi bi-info-circle mr-1"></i>
+                    Auto-updates: Incoming → InProgress (stays)
+                </p>
+            </div>
+            <div>
+                <label asp-for="QC.Status" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-toggle-on mr-1"></i>Status <span class="text-red-600">*</span>
+                </label>
+                <select asp-for="QC.Status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" asp-items="Html.GetEnumSelectList<EbikeRental.Domain.Enums.QualityCheckStatus>()" id="statusSelect">
+                    <option value="">-- Select Status --</option>
+                </select>
+                <span asp-validation-for="QC.Status" class="text-red-600 text-sm mt-1 block"></span>
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="bi bi-info-circle mr-1"></i>
+                    Auto-updates: Pending → InProgress → Passed
+                </p>
+            </div>
+            <div>
+                <label asp-for="QC.InspectedBy" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-person mr-1"></i>Inspected By <span class="text-red-600">*</span>
+                </label>
+                <input asp-for="QC.InspectedBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="QC.InspectedBy" class="text-red-600 text-sm mt-1 block"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="QC.GoodsReceiptId" class="block text-sm font-medium text-gray-700 mb-2">
+                    Goods Receipt
+                    @if (Model.QC.GoodsReceiptId.HasValue)
+                    {
+                        <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs font-medium rounded">
+                            <i class="bi bi-link-45deg"></i> Linked
+                        </span>
+                    }
+                </label>
+                <div class="flex gap-2">
+                    <select id="goodsReceiptSelect" asp-for="QC.GoodsReceiptId" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleReferenceSource('gr')">
+                        <option value="">-- Select GR (Optional) --</option>
+                        @foreach (var gr in Model.GoodsReceipts)
+                        {
+                            <option value="@gr.Id">@gr.DocumentNumber - @gr.VendorName</option>
+                        }
+                    </select>
+                    <button type="button" onclick="loadGoodsReceipt()" id="loadGrBtn" class="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                        <i class="bi bi-arrow-down-circle"></i> Load
+                    </button>
+                </div>
+                @if (Model.QC.Id > 0 && Model.QC.GoodsReceiptId.HasValue)
+                {
+                    <p class="text-xs text-blue-600 mt-1">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Linked to: @Model.QC.GoodsReceiptNumber
+                    </p>
+                }
+            </div>
+            <div>
+                <label asp-for="QC.ProductionOrderId" class="block text-sm font-medium text-gray-700 mb-2">
+                    Production Order
+                    @if (Model.QC.ProductionOrderId.HasValue)
+                    {
+                        <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">
+                            <i class="bi bi-link-45deg"></i> Linked
+                        </span>
+                    }
+                </label>
+                <div class="flex gap-2">
+                    <select id="productionOrderSelect" asp-for="QC.ProductionOrderId" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleReferenceSource('po')">
+                        <option value="">-- Select PO (Optional) --</option>
+                        @foreach (var po in Model.ProductionOrders)
+                        {
+                            <option value="@po.Id">@po.OrderNumber - @po.ItemName</option>
+                        }
+                    </select>
+                    <button type="button" onclick="loadProductionOrderQc()" id="loadPoBtn" class="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                        <i class="bi bi-arrow-down-circle"></i> Load
+                    </button>
+                </div>
+                @if (Model.QC.Id > 0 && Model.QC.ProductionOrderId.HasValue)
+                {
+                    <p class="text-xs text-blue-600 mt-1">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Linked to: @Model.QC.ProductionOrderNumber
+                    </p>
+                }
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="QC.Remarks" class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+            <textarea asp-for="QC.Remarks" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Section -->
+    <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="bi bi-upc-scan text-blue-600 text-xl"></i>
+                <span>Barcode Scanner</span>
+            </h3>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">Scan Mode:</span>
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                    <i class="bi bi-check-circle-fill mr-1"></i>Active
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="bi bi-upc mr-1"></i>Scan Barcode
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" 
+                           id="barcodeInput" 
+                           class="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-lg"
+                           placeholder="Focus here and scan barcode..." 
+                           autofocus />
+                    <button type="button" 
+                            onclick="clearBarcodeInput()" 
+                            class="px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="bi bi-info-circle mr-1"></i>
+                    Scan <strong>Barcode</strong> or <strong>Item Code</strong> to auto-increment Passed Qty (+1 per scan)
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600" id="scanCount">0</div>
+                    <div class="text-sm text-gray-600 mt-1">Total Scans</div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <div class="text-xs text-gray-500" id="lastScanTime">No scans yet</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="scanLog" class="mt-4 max-h-32 overflow-y-auto bg-white rounded-lg border border-gray-200 p-3 hidden">
+            <div class="text-xs font-medium text-gray-700 mb-2">Recent Scans:</div>
+            <div id="scanLogContent" class="text-xs text-gray-600 space-y-1"></div>
+        </div>
+    </div>
+
+    <!-- Inspection Items -->
+    <div class="mb-6">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-800">Inspection Items</h3>
+            <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700" onclick="addItem()">
+                <i class="bi bi-plus"></i>
+                Add Item
+            </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 text-sm" id="itemsTable">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                        <th class="px-3 py-3">Item</th>
+                        <th class="px-3 py-3">Inspected Qty</th>
+                        <th class="px-3 py-3">Passed Qty</th>
+                        <th class="px-3 py-3">Rejected Qty</th>
+                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3">Batch No.</th>
+                        <th class="px-3 py-3">Notes</th>
+                        <th class="px-3 py-3 text-center">
+                            <i class="bi bi-check-circle"></i> Complete
+                        </th>
+                        <th class="px-3 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white" id="itemsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+<partial name="_FormCardLayoutEnd" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let itemIndex = 0;
+        const items = @Html.Raw(Json.Serialize(Model.Items));
+
+        function toggleReferenceSource(source) {
+            const grSelect = document.getElementById('goodsReceiptSelect');
+            const poSelect = document.getElementById('productionOrderSelect');
+            const loadGrBtn = document.getElementById('loadGrBtn');
+            const loadPoBtn = document.getElementById('loadPoBtn');
+
+            if (source === 'gr' && grSelect.value) {
+                // Disable PO if GR is selected
+                poSelect.value = '';
+                poSelect.disabled = true;
+                loadPoBtn.disabled = true;
+                loadPoBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                grSelect.disabled = false;
+                loadGrBtn.disabled = false;
+                loadGrBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                // Clear items when switching
+                clearAllItems();
+            } else if (source === 'po' && poSelect.value) {
+                // Disable GR if PO is selected
+                grSelect.value = '';
+                grSelect.disabled = true;
+                loadGrBtn.disabled = true;
+                loadGrBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                poSelect.disabled = false;
+                loadPoBtn.disabled = false;
+                loadPoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                // Clear items when switching
+                clearAllItems();
+            } else {
+                // Enable both if none selected
+                grSelect.disabled = false;
+                poSelect.disabled = false;
+                loadGrBtn.disabled = false;
+                loadPoBtn.disabled = false;
+                loadGrBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                loadPoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function clearAllItems() {
+            document.getElementById('itemsBody').innerHTML = '';
+            itemIndex = 0;
+            
+            // Clear barcode scanner data
+            resetBarcodeScanner();
+        }
+        
+        function resetBarcodeScanner() {
+            // Clear scan count
+            totalScans = 0;
+            document.getElementById('scanCount').textContent = '0';
+            
+            // Clear last scan time
+            document.getElementById('lastScanTime').textContent = 'No scans yet';
+            
+            // Clear scan log
+            scanLog.length = 0;
+            const scanLogDiv = document.getElementById('scanLog');
+            scanLogDiv.classList.add('hidden');
+            document.getElementById('scanLogContent').innerHTML = '';
+            
+            // Clear barcode input
+            const barcodeInput = document.getElementById('barcodeInput');
+            if (barcodeInput) {
+                barcodeInput.value = '';
+            }
+            
+            console.log('Barcode scanner reset');
+        }
+
+        function resetStatusToInitial() {
+            // Reset Check Type to Incoming and Status to Pending
+            const checkTypeSelect = document.querySelector('[name="QC.CheckType"]');
+            const statusSelect = document.querySelector('[name="QC.Status"]');
+            
+            if (checkTypeSelect) {
+                checkTypeSelect.value = '1'; // Incoming (enum value = 1)
+            }
+            
+            if (statusSelect) {
+                statusSelect.value = '1'; // Pending (enum value = 1)
+            }
+            
+            console.log('Status reset to: Incoming + Pending');
+        }
+
+        function loadGoodsReceipt() {
+            const select = document.getElementById('goodsReceiptSelect');
+            const grId = select.value;
+
+            if (!grId) {
+                alert('Please select a Goods Receipt first.');
+                return;
+            }
+
+            // Show loading
+            const loadBtn = event.target;
+            const originalText = loadBtn.innerHTML;
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+
+            // Call API
+            fetch(`/Quality/QC/Info?handler=LoadGoodsReceiptItems&grId=${grId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = originalText;
+
+                    if (data.success && data.items) {
+                        // Clear existing items
+                        clearAllItems();
+
+                        // Reset status to initial state
+                        resetStatusToInitial();
+
+                        // Add items from GR
+                        data.items.forEach(item => {
+                            addItemFromGR(item);
+                        });
+                        
+                        showMessage('success', data.message || 'Goods Receipt items loaded successfully!');
+                    } else {
+                        showMessage('error', data.message || 'Cannot load from this Goods Receipt.');
+                    }
+                })
+                .catch(error => {
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = originalText;
+                    showMessage('error', 'Error loading Goods Receipt: ' + error.message);
+                    console.error('Error:', error);
+                });
+        }
+
+        function addItemFromGR(grItem) {
+            const tbody = document.getElementById('itemsBody');
+            const row = tbody.insertRow();
+
+            // Find item in items list
+            const item = items.find(i => i.id === grItem.itemId);
+            const itemName = item ? `${item.code} - ${item.name}` : grItem.itemName;
+
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="${grItem.itemId}" selected>${itemName}</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].InspectedQuantity" value="${grItem.quantity}" onchange="checkRowComplete(this); autoApproveCheck()" class="inspected-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].PassedQuantity" value="0" onchange="checkRowComplete(this); autoApproveCheck()" class="passed-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="1" min="0" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].RejectedQuantity" value="0" onchange="autoApproveCheck()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1">Pending</option>
+                        <option value="3" selected>Passed</option>
+                        <option value="4">Failed</option>
+                        <option value="5">Conditional</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].BatchNumber" placeholder="GR-${grItem.documentNumber}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].Notes" value="From Goods Receipt ${grItem.documentNumber}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <div class="complete-indicator">
+                        <i class="bi bi-hourglass-split text-gray-400 text-xl"></i>
+                    </div>
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            itemIndex++;
+        }
+
+        function loadProductionOrderQc() {
+            const select = document.getElementById('productionOrderSelect');
+            const productionOrderId = select.value;
+
+            if (!productionOrderId) {
+                alert('Please select a Production Order first.');
+                return;
+            }
+
+            // Show loading
+            const loadBtn = event.target;
+            const originalText = loadBtn.innerHTML;
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+
+            // Call API
+            fetch(`/Quality/QC/Info?handler=LoadProductionOrderQc&productionOrderId=${productionOrderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = originalText;
+
+                    if (data.success && data.canReference) {
+                        // Clear existing items
+                        document.getElementById('itemsBody').innerHTML = '';
+                        itemIndex = 0;
+
+                        // Reset status to initial state
+                        resetStatusToInitial();
+
+                        if (data.productionOrder) {
+                            // Add item from production order
+                            addItemFromProductionOrder(data.productionOrder);
+                            
+                            // Show success message
+                            showMessage('success', data.message || 'Production Order loaded successfully!');
+                        } else {
+                            showMessage('info', data.message || 'Production order has no QC steps. You can add inspection items manually.');
+                        }
+                    } else {
+                        // Cannot reference
+                        showMessage('error', data.message || 'Cannot load from this Production Order.');
+                        
+                        // Show pending steps if available
+                        if (data.pendingSteps && data.pendingSteps.length > 0) {
+                            let stepsHtml = '<ul class="list-disc ml-5 mt-2">';
+                            data.pendingSteps.forEach(step => {
+                                stepsHtml += `<li>Step ${step.sequence}: ${step.qcCode} - ${step.qcName} (${step.status})</li>`;
+                            });
+                            stepsHtml += '</ul>';
+                            showMessage('warning', data.message + stepsHtml);
+                        }
+                    }
+                })
+                .catch(error => {
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = originalText;
+                    showMessage('error', 'Error loading Production Order: ' + error.message);
+                    console.error('Error:', error);
+                });
+        }
+
+        function addItemFromProductionOrder(po) {
+            const tbody = document.getElementById('itemsBody');
+            const row = tbody.insertRow();
+
+            // Find item in items list
+            const item = items.find(i => i.id === po.itemId);
+            const itemName = item ? `${item.code} - ${item.name}` : po.itemName;
+
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="${po.itemId}" selected>${itemName}</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].InspectedQuantity" value="${po.quantity}" onchange="checkRowComplete(this); autoApproveCheck()" class="inspected-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].PassedQuantity" value="0" onchange="checkRowComplete(this); autoApproveCheck()" class="passed-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="1" min="0" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].RejectedQuantity" value="0" onchange="autoApproveCheck()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1">Pending</option>
+                        <option value="3" selected>Passed</option>
+                        <option value="4">Failed</option>
+                        <option value="5">Conditional</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].BatchNumber" placeholder="PO-${po.orderNumber}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].Notes" value="From Production Order ${po.orderNumber}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <div class="complete-indicator">
+                        <i class="bi bi-hourglass-split text-gray-400 text-xl"></i>
+                    </div>
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            itemIndex++;
+        }
+
+        function autoApproveCheck() {
+            // Check if all items are inspected and passed without rejection
+            const tbody = document.getElementById('itemsBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            if (rows.length === 0) return;
+
+            let allInspected = true;
+            let allComplete = true;
+            let hasRejection = false;
+
+            rows.forEach(row => {
+                const inspected = Math.floor(parseFloat(row.querySelector('[name*="InspectedQuantity"]')?.value || 0));
+                const passed = Math.floor(parseFloat(row.querySelector('[name*="PassedQuantity"]')?.value || 0));
+                const rejected = parseFloat(row.querySelector('[name*="RejectedQuantity"]')?.value || 0);
+
+                if (inspected === 0 || passed === 0) {
+                    allInspected = false;
+                }
+
+                if (passed < inspected) {
+                    allComplete = false;
+                }
+
+                if (rejected > 0) {
+                    hasRejection = true;
+                }
+            });
+
+            // Auto-update status dropdown
+            const statusSelect = document.querySelector('[name="QC.Status"]');
+            
+            if (!statusSelect) return;
+
+            // Logic: If all items are complete (Passed Qty = Inspected Qty) → Status = Passed only
+            // Do NOT change Check Type to Final - keep it as InProgress
+            if (allComplete && allInspected && !hasRejection) {
+                // All items checked completely with no rejections
+                statusSelect.value = '3'; // Passed (but keep Check Type as InProgress)
+                console.log('All items complete! Status updated to Passed (Check Type remains InProgress)');
+                showMessage('success', 'All items inspected and passed! Status updated to "Passed".');
+            }
+        }
+
+        function approveQC() {
+            if (confirm('Are you sure you want to approve this QC?')) {
+                window.location.href = `/Quality/QC/Info?handler=Approve&id=@Model.QC.Id`;
+            }
+        }
+
+        function rejectQC() {
+            const reason = prompt('Please enter rejection reason:');
+            if (reason) {
+                window.location.href = `/Quality/QC/Info?handler=Reject&id=@Model.QC.Id&reason=${encodeURIComponent(reason)}`;
+            }
+        }
+
+        function showMessage(type, message) {
+            // Remove existing message if any
+            const existingMsg = document.querySelector('.alert-message');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-700',
+                error: 'bg-red-50 border-red-200 text-red-700',
+                warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+                info: 'bg-blue-50 border-blue-200 text-blue-700'
+            };
+
+            const icons = {
+                success: 'bi-check-circle',
+                error: 'bi-x-circle',
+                warning: 'bi-exclamation-triangle',
+                info: 'bi-info-circle'
+            };
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `alert-message mb-4 rounded-lg border px-4 py-3 text-sm ${colors[type] || colors.info}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <i class="bi ${icons[type] || icons.info} text-lg"></i>
+                    <div class="flex-1">${message}</div>
+                    <button onclick="this.closest('.alert-message').remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `;
+
+            const form = document.getElementById('info-form');
+            form.insertBefore(messageDiv, form.firstChild);
+
+            // Auto remove after 10 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 10000);
+        }
+
+        function addItem() {
+            const tbody = document.getElementById('itemsBody');
+            const row = tbody.insertRow();
+
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">-- Select Item --</option>
+                        ${items.map(item => `<option value="${item.id}">${item.code} - ${item.name}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].InspectedQuantity" onchange="checkRowComplete(this); autoApproveCheck()" class="inspected-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].PassedQuantity" onchange="checkRowComplete(this); autoApproveCheck()" class="passed-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="1" min="0" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].RejectedQuantity" onchange="autoApproveCheck()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1">Pending</option>
+                        <option value="3" selected>Passed</option>
+                        <option value="4">Failed</option>
+                        <option value="5">Conditional</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].BatchNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].Notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <div class="complete-indicator">
+                        <i class="bi bi-hourglass-split text-gray-400 text-xl"></i>
+                    </div>
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            itemIndex++;
+        }
+
+        function addItemFromExisting(existingItem) {
+            const tbody = document.getElementById('itemsBody');
+            const row = tbody.insertRow();
+
+            // Find item in items list
+            const item = items.find(i => i.id === existingItem.itemId);
+            const itemOptions = items.map(i => 
+                `<option value="${i.id}" ${i.id === existingItem.itemId ? 'selected' : ''}>${i.code} - ${i.name}</option>`
+            ).join('');
+
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <input type="hidden" name="QC.Items[${itemIndex}].Id" value="${existingItem.id}" />
+                    <select name="QC.Items[${itemIndex}].ItemId" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">-- Select Item --</option>
+                        ${itemOptions}
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].InspectedQuantity" value="${existingItem.inspectedQuantity}" onchange="checkRowComplete(this); autoApproveCheck()" class="inspected-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].PassedQuantity" value="${existingItem.passedQuantity}" onchange="checkRowComplete(this); autoApproveCheck()" class="passed-qty w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="1" min="0" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" name="QC.Items[${itemIndex}].RejectedQuantity" value="${existingItem.rejectedQuantity}" onchange="autoApproveCheck()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01" required />
+                </td>
+                <td class="px-3 py-2">
+                    <select name="QC.Items[${itemIndex}].ItemStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1" ${existingItem.itemStatus === 1 ? 'selected' : ''}>Pending</option>
+                        <option value="3" ${existingItem.itemStatus === 3 ? 'selected' : ''}>Passed</option>
+                        <option value="4" ${existingItem.itemStatus === 4 ? 'selected' : ''}>Failed</option>
+                        <option value="5" ${existingItem.itemStatus === 5 ? 'selected' : ''}>Conditional</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].BatchNumber" value="${existingItem.batchNumber || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2">
+                    <input type="text" name="QC.Items[${itemIndex}].Notes" value="${existingItem.notes || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <div class="complete-indicator">
+                        <i class="bi bi-hourglass-split text-gray-400 text-xl"></i>
+                    </div>
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            itemIndex++;
+            
+            // Check row complete status after adding
+            setTimeout(() => {
+                const passedQtyInput = row.querySelector('.passed-qty');
+                if (passedQtyInput) {
+                    checkRowComplete(passedQtyInput);
+                }
+            }, 100);
+        }
+
+        // Initialize toggle state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const grSelect = document.getElementById('goodsReceiptSelect');
+            const poSelect = document.getElementById('productionOrderSelect');
+            
+            // Log current values for debugging
+            console.log('Page loaded - GR:', grSelect?.value, 'PO:', poSelect?.value);
+            console.log('Check Type:', @((int)Model.QC.CheckType), 'Status:', @((int)Model.QC.Status));
+            
+            // Check if editing and has reference
+            const isEditing = @(Model.QC.Id > 0 ? "true" : "false");
+            
+            if (isEditing) {
+                console.log('Edit mode detected');
+                
+                // If has GR reference, disable PO
+                if (grSelect && grSelect.value) {
+                    console.log('Has GR reference:', grSelect.value);
+                    poSelect.disabled = true;
+                    const loadPoBtn = document.getElementById('loadPoBtn');
+                    loadPoBtn.disabled = true;
+                    loadPoBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                
+                // If has PO reference, disable GR
+                if (poSelect && poSelect.value) {
+                    console.log('Has PO reference:', poSelect.value);
+                    grSelect.disabled = true;
+                    const loadGrBtn = document.getElementById('loadGrBtn');
+                    loadGrBtn.disabled = true;
+                    loadGrBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                // New mode - normal toggle behavior
+                if (grSelect && grSelect.value) {
+                    console.log('Toggling GR reference');
+                    toggleReferenceSource('gr');
+                } else if (poSelect && poSelect.value) {
+                    console.log('Toggling PO reference');
+                    toggleReferenceSource('po');
+                }
+            }
+            
+            // Log Check Type and Status values
+            const checkTypeSelect = document.querySelector('[name="QC.CheckType"]');
+            const statusSelect = document.querySelector('[name="QC.Status"]');
+            console.log('Check Type value:', checkTypeSelect?.value, 'Status value:', statusSelect?.value);
+        });
+
+        // Load existing items if editing
+        @if (Model.QC.Items.Any())
+        {
+            <text>
+            @foreach (var item in Model.QC.Items)
+            {
+                <text>
+                const existingItem_@item.Id = {
+                    id: @item.Id,
+                    itemId: @item.ItemId,
+                    itemCode: '@item.ItemCode',
+                    itemName: '@item.ItemName',
+                    inspectedQuantity: @item.InspectedQuantity,
+                    passedQuantity: @item.PassedQuantity,
+                    rejectedQuantity: @item.RejectedQuantity,
+                    itemStatus: @((int)item.ItemStatus),
+                    batchNumber: '@item.BatchNumber',
+                    notes: '@(item.Notes?.Replace("'", "\\'"))'
+                };
+                addItemFromExisting(existingItem_@item.Id);
+                </text>
+            }
+            </text>
+        }
+
+        // ===========================
+        // BARCODE SCANNER FUNCTIONS
+        // ===========================
+        let totalScans = 0;
+        const scanLog = [];
+
+        // Barcode input handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const barcodeInput = document.getElementById('barcodeInput');
+            if (barcodeInput) {
+                barcodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        processBarcodeScan(this.value.trim());
+                        this.value = '';
+                    }
+                });
+            }
+        });
+
+        function processBarcodeScan(barcode) {
+            if (!barcode) return;
+
+            console.log('Barcode scanned:', barcode);
+
+            // Find matching item row by barcode, item code, or batch number
+            const tbody = document.getElementById('itemsBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            let found = false;
+            let matchedRow = null;
+
+            // Try to find row by multiple methods
+            for (let row of rows) {
+                const batchInput = row.querySelector('[name*="BatchNumber"]');
+                const itemSelect = row.querySelector('[name*="ItemId"]');
+                const selectedOption = itemSelect?.options[itemSelect.selectedIndex];
+                const itemText = selectedOption?.text || '';
+                const itemId = selectedOption?.value;
+                
+                // Get item details from items array
+                const item = items.find(i => i.id === parseInt(itemId));
+                
+                // Method 1: Check if barcode matches Item.Barcode
+                if (item && item.barcode && barcode === item.barcode) {
+                    matchedRow = row;
+                    found = true;
+                    console.log('Match found by Item Barcode:', item.barcode);
+                    break;
+                }
+                
+                // Method 2: Check if barcode matches Item Code
+                const itemCode = itemText.split(' - ')[0];
+                if (itemCode && barcode === itemCode) {
+                    matchedRow = row;
+                    found = true;
+                    console.log('Match found by Item Code:', itemCode);
+                    break;
+                }
+                
+                // Method 3: Check if barcode contains Item Code (partial match)
+                if (itemCode && barcode.includes(itemCode)) {
+                    matchedRow = row;
+                    found = true;
+                    console.log('Match found by partial Item Code:', itemCode);
+                    break;
+                }
+                
+                // Method 4: Check if barcode matches Batch Number
+                if (batchInput && batchInput.value && barcode.includes(batchInput.value)) {
+                    matchedRow = row;
+                    found = true;
+                    console.log('Match found by Batch Number:', batchInput.value);
+                    break;
+                }
+            }
+
+            if (!found || !matchedRow) {
+                showMessage('warning', `No matching item found for: ${barcode}`);
+                playSound('error');
+                return;
+            }
+
+            // On first scan, update status to InProgress
+            updateStatusOnFirstScan();
+
+            // Increment Passed Qty (as integer)
+            const passedQtyInput = matchedRow.querySelector('.passed-qty');
+            const inspectedQtyInput = matchedRow.querySelector('.inspected-qty');
+            
+            if (!passedQtyInput || !inspectedQtyInput) return;
+
+            const currentPassed = Math.floor(parseFloat(passedQtyInput.value) || 0);
+            const inspectedQty = Math.floor(parseFloat(inspectedQtyInput.value) || 0);
+
+            // Check if already complete
+            if (currentPassed >= inspectedQty) {
+                showMessage('info', `Item already complete (${currentPassed}/${inspectedQty})`);
+                playSound('info');
+                return;
+            }
+
+            // Increment by 1 (integer only)
+            passedQtyInput.value = currentPassed + 1;
+            
+            // Update scan count
+            totalScans++;
+            document.getElementById('scanCount').textContent = totalScans;
+
+            // Update last scan time
+            const now = new Date();
+            document.getElementById('lastScanTime').textContent = now.toLocaleTimeString();
+
+            // Add to scan log
+            addToScanLog(barcode, matchedRow);
+
+            // Check row complete
+            checkRowComplete(passedQtyInput);
+
+            // Auto approve check (may update to Final/Passed)
+            autoApproveCheck();
+
+            // Play success sound
+            playSound('success');
+
+            // Highlight row briefly
+            matchedRow.classList.add('bg-green-50');
+            setTimeout(() => {
+                matchedRow.classList.remove('bg-green-50');
+            }, 500);
+        }
+
+        function updateStatusOnFirstScan() {
+            const checkTypeSelect = document.querySelector('[name="QC.CheckType"]');
+            const statusSelect = document.querySelector('[name="QC.Status"]');
+            
+            if (!checkTypeSelect || !statusSelect) return;
+
+            // Only update if still in initial state
+            const currentCheckType = checkTypeSelect.value;
+            const currentStatus = statusSelect.value;
+
+            // If Incoming/Pending, change to InProgress/InProgress
+            if (currentCheckType === '1' && currentStatus === '1') { // Incoming + Pending
+                checkTypeSelect.value = '2'; // InProcess (enum value = 2)
+                statusSelect.value = '2'; // InProgress (enum value = 2)
+                console.log('Status updated: Incoming/Pending → InProcess/InProgress on first scan');
+            }
+        }
+
+        function clearBarcodeInput() {
+            const input = document.getElementById('barcodeInput');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function addToScanLog(barcode, row) {
+            const itemSelect = row.querySelector('[name*="ItemId"]');
+            const itemText = itemSelect?.options[itemSelect.selectedIndex]?.text || 'Unknown';
+            const passedQty = row.querySelector('.passed-qty')?.value || '0';
+            
+            const logEntry = {
+                time: new Date().toLocaleTimeString(),
+                barcode: barcode,
+                item: itemText,
+                qty: passedQty
+            };
+
+            scanLog.unshift(logEntry);
+            if (scanLog.length > 10) scanLog.pop(); // Keep only last 10
+
+            // Update scan log display
+            const scanLogDiv = document.getElementById('scanLog');
+            const scanLogContent = document.getElementById('scanLogContent');
+            
+            if (scanLog.length > 0) {
+                scanLogDiv.classList.remove('hidden');
+                scanLogContent.innerHTML = scanLog.map(entry => 
+                    `<div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span class="text-gray-500">${entry.time}</span>
+                        <span class="font-medium">${entry.item}</span>
+                        <span class="text-green-600">Qty: ${entry.qty}</span>
+                    </div>`
+                ).join('');
+            }
+        }
+
+        function playSound(type) {
+            // Simple beep using Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                if (type === 'success') {
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                } else if (type === 'error') {
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'square';
+                } else {
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'triangle';
+                }
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // ===========================
+        // ROW COMPLETE INDICATOR
+        // ===========================
+        function checkRowComplete(input) {
+            const row = input.closest('tr');
+            if (!row) return;
+
+            const inspectedQty = Math.floor(parseFloat(row.querySelector('.inspected-qty')?.value || 0));
+            const passedQty = Math.floor(parseFloat(row.querySelector('.passed-qty')?.value || 0));
+            const indicator = row.querySelector('.complete-indicator');
+
+            if (!indicator) return;
+
+            if (passedQty >= inspectedQty && inspectedQty > 0) {
+                // Complete
+                indicator.innerHTML = '<i class="bi bi-check-circle-fill text-green-500 text-xl animate-pulse"></i>';
+                row.classList.add('bg-green-50');
+            } else if (passedQty > 0) {
+                // In progress
+                const percentage = Math.floor((passedQty / inspectedQty * 100));
+                indicator.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <i class="bi bi-hourglass-split text-blue-500 text-xl"></i>
+                        <span class="text-xs text-blue-600 font-medium">${percentage}%</span>
+                    </div>
+                `;
+                row.classList.remove('bg-green-50');
+            } else {
+                // Not started
+                indicator.innerHTML = '<i class="bi bi-hourglass-split text-gray-400 text-xl"></i>';
+                row.classList.remove('bg-green-50');
+            }
+        }
+    </script>
+}

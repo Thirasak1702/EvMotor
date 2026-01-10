@@ -1,0 +1,56 @@
+@* 
+    Shared Card Container Start for Info/Form Pages
+    Usage: Place this at the beginning of your form content
+    
+    Required ViewData:
+    - FormTitle: Title to display
+    - FormIcon: Bootstrap icon class (default: bi-pencil)
+    
+    Optional ViewData:
+    - BackLink: Back button link (default: ./Index)
+    - ShowBackButton: Show/hide back button (default: true)
+    - ShowFormButtons: Show Save/Cancel buttons in header (default: true)
+    - SaveButtonText: Text for save button (default: "Save")
+    - CancelButtonText: Text for cancel button (default: "Cancel")
+*@
+@{
+    var title = ViewData["FormTitle"] as string ?? ViewData["Title"] as string ?? "Form";
+    var icon = ViewData["FormIcon"] as string ?? "bi-pencil";
+    var backLink = ViewData["BackLink"] as string ?? "./Index";
+    var showBackButton = ViewData["ShowBackButton"] as bool? ?? true;
+    var showFormButtons = ViewData["ShowFormButtons"] as bool? ?? true;
+    var saveButtonText = ViewData["SaveButtonText"] as string ?? "Save";
+    var cancelButtonText = ViewData["CancelButtonText"] as string ?? "Cancel";
+}
+
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            @if (showBackButton)
+            {
+                <a href="@backLink" class="text-gray-600 hover:text-gray-800 font-medium mb-2 inline-flex items-center text-sm">
+                    <i class="bi bi-arrow-left mr-1"></i> Back to List
+                </a>
+            }
+            <h2 class="text-2xl font-bold text-gray-800">@title</h2>
+        </div>
+        
+        @if (showFormButtons)
+        {
+            <div class="flex gap-2">
+                <a href="@backLink" class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-2 rounded-lg transition inline-flex items-center">
+                    <i class="bi bi-x-circle mr-2"></i> @cancelButtonText
+                </a>
+                <button type="submit" form="info-form" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition inline-flex items-center">
+                    <i class="bi bi-check-circle mr-2"></i> @saveButtonText
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-lg">
+        <h4 class="text-lg font-semibold mb-0"><i class="bi @icon mr-2"></i>@ViewData["Title"]</h4>
+    </div>
+    <div class="p-6">
