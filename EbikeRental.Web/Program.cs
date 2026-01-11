@@ -221,14 +221,9 @@ using (var scope = app.Services.CreateScope())
         
         try
         {
-            var canConnect = await context.Database.CanConnectAsync();
-            logger.LogInformation($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
-
-            if (!canConnect)
-            {
-                logger.LogError("Cannot connect to database. Please check connection string.");
-                throw new Exception("Database connection failed");
-            }
+            // Try to execute a simple query to test connection
+            await context.Database.ExecuteSqlRawAsync("SELECT 1");
+            logger.LogInformation("✅ Database connection test: SUCCESS");
         }
         catch (Exception ex)
         {
