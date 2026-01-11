@@ -18,22 +18,41 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-// Railway: Read from ConnectionStrings__DefaultConnection environment variable
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Railway: Read directly from Environment Variables
+Console.WriteLine("🔍 Checking connection string sources...");
+
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
+
+Console.WriteLine($"Environment Variable: {(string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")) ? "NOT FOUND" : "FOUND")}");
+Console.WriteLine($"Configuration: {(string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection")) ? "NOT FOUND" : "FOUND")}");
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
+    Console.WriteLine("❌ Connection string not found in any source!");
+    Console.WriteLine("Available environment variables:");
+    foreach (System.Collections.DictionaryEntry env in Environment.GetEnvironmentVariables())
+    {
+        if (env.Key.ToString().Contains("MYSQL") || env.Key.ToString().Contains("Connection"))
+        {
+            Console.WriteLine($"  - {env.Key}");
+        }
+    }
+    
     throw new InvalidOperationException(
-        "❌ Connection string not found!\n" +
+        "Connection string not found!\n" +
         "Please check Railway Variables:\n" +
         "- ConnectionStrings__DefaultConnection should be set\n" +
         "- Example: Server=mysql.railway.internal;Port=3306;Database=railway;Uid=root;Pwd=yourpassword;"
     );
 }
 
-Console.WriteLine($"✅ Connection string loaded: Server={connectionString.Split(';')[0].Split('=')[1]}");
+Console.WriteLine($"✅ Connection string loaded successfully!");
 
-var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
+var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") 
+    ?? Environment.GetEnvironmentVariable("DatabaseProvider") 
+    ?? "MySQL";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
