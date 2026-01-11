@@ -15,7 +15,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Try multiple sources for connection string (Railway compatibility)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
+    ?? builder.Configuration["DATABASE_URL"]
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string not found. Please set ConnectionStrings__DefaultConnection environment variable.");
+
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
