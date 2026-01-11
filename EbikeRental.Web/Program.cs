@@ -18,8 +18,29 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found. Please set ConnectionStrings__DefaultConnection environment variable.");
+// Read from environment variables or configuration
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// If empty, try to build from individual MySQL variables (Railway style)
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    var host = builder.Configuration["MYSQLHOST"] ?? Environment.GetEnvironmentVariable("MYSQLHOST");
+    var port = builder.Configuration["MYSQLPORT"] ?? Environment.GetEnvironmentVariable("MYSQLPORT");
+    var database = builder.Configuration["MYSQLDATABASE"] ?? Environment.GetEnvironmentVariable("MYSQLDATABASE");
+    var user = builder.Configuration["MYSQLUSER"] ?? Environment.GetEnvironmentVariable("MYSQLUSER");
+    var password = builder.Configuration["MYSQLPASSWORD"] ?? Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+    if (!string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(password))
+    {
+        connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
+        Console.WriteLine($"✅ Built connection string from MySQL variables: Server={host}:{port}");
+    }
+}
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string not found. Please set ConnectionStrings__DefaultConnection or MySQL* environment variables.");
+}
 
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
 
