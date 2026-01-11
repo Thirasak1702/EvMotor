@@ -18,21 +18,20 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-// Railway: Use DATABASE_URL or ConnectionStrings__DefaultConnection
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
+// Railway: Read from ConnectionStrings__DefaultConnection environment variable
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
         "❌ Connection string not found!\n" +
-        "Please set environment variable: DATABASE_URL\n" +
-        "Example: Server=mysql.railway.internal;Port=3306;Database=railway;Uid=root;Pwd=yourpassword;"
+        "Please check Railway Variables:\n" +
+        "- ConnectionStrings__DefaultConnection should be set\n" +
+        "- Example: Server=mysql.railway.internal;Port=3306;Database=railway;Uid=root;Pwd=yourpassword;"
     );
 }
 
-Console.WriteLine($"✅ Connection string loaded: {connectionString.Substring(0, Math.Min(40, connectionString.Length))}...");
+Console.WriteLine($"✅ Connection string loaded: Server={connectionString.Split(';')[0].Split('=')[1]}");
 
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
 
