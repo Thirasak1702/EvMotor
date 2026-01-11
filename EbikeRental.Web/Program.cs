@@ -16,13 +16,22 @@ builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
 // Try multiple sources for connection string (Railway compatibility)
+Console.WriteLine("🔍 DEBUG: Checking connection string sources... [v2]");
+Console.WriteLine($"GetConnectionString: {builder.Configuration.GetConnectionString("DefaultConnection")}");
+Console.WriteLine($"ConnectionStrings:DefaultConnection: {builder.Configuration["ConnectionStrings:DefaultConnection"]}");
+Console.WriteLine($"DATABASE_URL: {builder.Configuration["DATABASE_URL"]}");
+Console.WriteLine($"Environment Variable: {Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")}");
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
     ?? builder.Configuration["DATABASE_URL"]
     ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? throw new InvalidOperationException("Connection string not found. Please set ConnectionStrings__DefaultConnection environment variable.");
 
+Console.WriteLine($"✅ Final Connection String: {connectionString.Substring(0, Math.Min(50, connectionString.Length))}...");
+
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
+Console.WriteLine($"✅ Database Provider: {databaseProvider}");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
