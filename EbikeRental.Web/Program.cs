@@ -18,37 +18,53 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-// Railway: Read directly from Environment Variables
+// Railway: Build connection string from MYSQL* environment variables
 Console.WriteLine("🔍 Checking connection string sources...");
 
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-Console.WriteLine($"Environment Variable: {(string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")) ? "NOT FOUND" : "FOUND")}");
-Console.WriteLine($"Configuration: {(string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection")) ? "NOT FOUND" : "FOUND")}");
+// If not found, build from MYSQL* variables (Railway default)
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    Console.WriteLine("📦 Building connection string from MYSQL* variables...");
+    
+    var host = Environment.GetEnvironmentVariable("MYSQLHOST");
+    var port = Environment.GetEnvironmentVariable("MYSQLPORT");
+    var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+    var user = Environment.GetEnvironmentVariable("MYSQLUSER");
+    var password = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+    Console.WriteLine($"  MYSQLHOST: {(string.IsNullOrEmpty(host) ? "NOT FOUND" : host)}");
+    Console.WriteLine($"  MYSQLPORT: {(string.IsNullOrEmpty(port) ? "NOT FOUND" : port)}");
+    Console.WriteLine($"  MYSQLDATABASE: {(string.IsNullOrEmpty(database) ? "NOT FOUND" : database)}");
+    Console.WriteLine($"  MYSQLUSER: {(string.IsNullOrEmpty(user) ? "NOT FOUND" : user)}");
+    Console.WriteLine($"  MYSQLPASSWORD: {(string.IsNullOrEmpty(password) ? "NOT FOUND" : "***HIDDEN***")}");
+
+    if (!string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(password))
+    {
+        connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
+        Console.WriteLine($"✅ Connection string built successfully: Server={host}:{port}");
+    }
+    else
+    {
+        Console.WriteLine("❌ MYSQL* variables not found!");
+    }
+}
+else
+{
+    Console.WriteLine($"✅ Connection string loaded from configuration");
+}
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    Console.WriteLine("❌ Connection string not found in any source!");
-    Console.WriteLine("Available environment variables:");
-    foreach (System.Collections.DictionaryEntry env in Environment.GetEnvironmentVariables())
-    {
-        if (env.Key.ToString().Contains("MYSQL") || env.Key.ToString().Contains("Connection"))
-        {
-            Console.WriteLine($"  - {env.Key}");
-        }
-    }
-    
     throw new InvalidOperationException(
         "Connection string not found!\n" +
-        "Please check Railway Variables:\n" +
-        "- ConnectionStrings__DefaultConnection should be set\n" +
-        "- Example: Server=mysql.railway.internal;Port=3306;Database=railway;Uid=root;Pwd=yourpassword;"
+        "Please set either:\n" +
+        "1. ConnectionStrings__DefaultConnection, OR\n" +
+        "2. MYSQL* environment variables (MYSQLHOST, MYSQLPORT, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD)"
     );
 }
-
-Console.WriteLine($"✅ Connection string loaded successfully!");
 
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") 
     ?? Environment.GetEnvironmentVariable("DatabaseProvider") 
