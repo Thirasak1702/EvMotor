@@ -131,13 +131,28 @@ using (var scope = app.Services.CreateScope())
 
         // Test connection
         logger.LogInformation("Testing database connection...");
-        var canConnect = await context.Database.CanConnectAsync();
-        logger.LogInformation($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
-
-        if (!canConnect)
+        logger.LogInformation($"Connection String (masked): {connectionString?.Substring(0, Math.Min(60, connectionString.Length))}...");
+        
+        try
         {
-            logger.LogError("Cannot connect to database. Please check connection string.");
-            throw new Exception("Database connection failed");
+            var canConnect = await context.Database.CanConnectAsync();
+            logger.LogInformation($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
+
+            if (!canConnect)
+            {
+                logger.LogError("Cannot connect to database. Please check connection string.");
+                throw new Exception("Database connection failed");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Connection error details: {ex.Message}");
+            logger.LogError($"Error type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                logger.LogError($"Inner exception: {ex.InnerException.Message}");
+            }
+            throw;
         }
 
         // Apply migrations
