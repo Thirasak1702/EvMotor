@@ -37,7 +37,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
         {
             var uri = new Uri(mysqlUrl);
             var userInfo = uri.UserInfo.Split(':');
-            connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};";
+            connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=None;AllowPublicKeyRetrieval=True;";
             Console.WriteLine($"✅ Parsed MYSQL_URL successfully: Server={uri.Host}:{uri.Port}");
         }
         catch (Exception ex)
@@ -66,7 +66,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
     if (!string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(password))
     {
-        connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
+        connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};SslMode=None;AllowPublicKeyRetrieval=True;";
         Console.WriteLine($"✅ Connection string built successfully");
     }
 }
