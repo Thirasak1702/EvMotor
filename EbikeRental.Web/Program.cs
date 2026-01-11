@@ -232,12 +232,21 @@ using (var scope = app.Services.CreateScope())
         }
         catch (Exception ex)
         {
-            logger.LogError($"Connection error details: {ex.Message}");
-            logger.LogError($"Error type: {ex.GetType().Name}");
+            logger.LogError($"❌ Connection error details: {ex.Message}");
+            logger.LogError($"Error type: {ex.GetType().FullName}");
+            
             if (ex.InnerException != null)
             {
-                logger.LogError($"Inner exception: {ex.InnerException.Message}");
+                logger.LogError($"Inner exception type: {ex.InnerException.GetType().FullName}");
+                logger.LogError($"Inner exception message: {ex.InnerException.Message}");
+                
+                if (ex.InnerException.InnerException != null)
+                {
+                    logger.LogError($"Deepest exception: {ex.InnerException.InnerException.Message}");
+                }
             }
+            
+            logger.LogError($"Stack trace: {ex.StackTrace}");
             throw;
         }
 
