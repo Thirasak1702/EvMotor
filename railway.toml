@@ -6,3 +6,13 @@ dockerfilePath = "Dockerfile"
 startCommand = ""
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Ensure environment variables are passed to Docker container
+[deploy.env]
+# Railway will inject these from service variables
+MYSQLHOST = "${{MYSQLHOST}}"
+MYSQLPORT = "${{MYSQLPORT}}"
+MYSQLDATABASE = "${{MYSQLDATABASE}}"
+MYSQLUSER = "${{MYSQLUSER}}"
+MYSQLPASSWORD = "${{MYSQLPASSWORD}}"
+DatabaseProvider = "MySQL"
