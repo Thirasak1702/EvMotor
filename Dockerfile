@@ -34,9 +34,5 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Railway: Accept connection string from environment
-ARG ConnectionStrings__DefaultConnection
-ENV ConnectionStrings__DefaultConnection=$ConnectionStrings__DefaultConnection
-
 # Run the application
 ENTRYPOINT ["dotnet", "EbikeRental.Web.dll"]

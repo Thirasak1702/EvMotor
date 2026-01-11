@@ -18,19 +18,21 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-// Railway: Build connection string from MYSQL* environment variables
+// Railway: Try MYSQL_URL first (Railway's standard)
 Console.WriteLine("🔍 Checking connection string sources...");
 
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+var connectionString = Environment.GetEnvironmentVariable("MYSQL_URL")
+    ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// If not found, build from MYSQL* variables (Railway default)
+// If not found, build from MYSQL* variables
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     Console.WriteLine("📦 Building connection string from MYSQL* variables...");
     
     var host = Environment.GetEnvironmentVariable("MYSQLHOST");
-    var port = Environment.GetEnvironmentVariable("MYSQLPORT");
+    var port = Environment.GetEnvironmentVariable("MYSQLPORT") ?? "3306";
     var database = Environment.GetEnvironmentVariable("MYSQLDATABASE");
     var user = Environment.GetEnvironmentVariable("MYSQLUSER");
     var password = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
@@ -49,11 +51,25 @@ if (string.IsNullOrWhiteSpace(connectionString))
     else
     {
         Console.WriteLine("❌ MYSQL* variables not found!");
+        
+        // Last resort: try to find any MySQL-related variables
+        Console.WriteLine("🔍 Searching all environment variables...");
+        var allVars = Environment.GetEnvironmentVariables();
+        foreach (System.Collections.DictionaryEntry entry in allVars)
+        {
+            var key = entry.Key.ToString();
+            if (key.Contains("MYSQL", StringComparison.OrdinalIgnoreCase) || 
+                key.Contains("DATABASE", StringComparison.OrdinalIgnoreCase) ||
+                key.Contains("Connection", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"  Found: {key}");
+            }
+        }
     }
 }
 else
 {
-    Console.WriteLine($"✅ Connection string loaded from configuration");
+    Console.WriteLine($"✅ Connection string loaded from MYSQL_URL or DATABASE_URL");
 }
 
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -61,8 +77,9 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
         "Connection string not found!\n" +
         "Please set either:\n" +
-        "1. ConnectionStrings__DefaultConnection, OR\n" +
-        "2. MYSQL* environment variables (MYSQLHOST, MYSQLPORT, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD)"
+        "1. MYSQL_URL or DATABASE_URL, OR\n" +
+        "2. ConnectionStrings__DefaultConnection, OR\n" +
+        "3. MYSQL* environment variables (MYSQLHOST, MYSQLPORT, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD)"
     );
 }
 
