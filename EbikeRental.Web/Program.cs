@@ -18,29 +18,21 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddRazorPages();
 
 // Database - Support both SQL Server and MySQL
-// Read from environment variables or configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// If empty, try to build from individual MySQL variables (Railway style)
-if (string.IsNullOrWhiteSpace(connectionString))
-{
-    var host = builder.Configuration["MYSQLHOST"] ?? Environment.GetEnvironmentVariable("MYSQLHOST");
-    var port = builder.Configuration["MYSQLPORT"] ?? Environment.GetEnvironmentVariable("MYSQLPORT");
-    var database = builder.Configuration["MYSQLDATABASE"] ?? Environment.GetEnvironmentVariable("MYSQLDATABASE");
-    var user = builder.Configuration["MYSQLUSER"] ?? Environment.GetEnvironmentVariable("MYSQLUSER");
-    var password = builder.Configuration["MYSQLPASSWORD"] ?? Environment.GetEnvironmentVariable("MYSQLPASSWORD");
-
-    if (!string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(password))
-    {
-        connectionString = $"Server={host};Port={port};Database={database};Uid={user};Pwd={password};";
-        Console.WriteLine($"✅ Built connection string from MySQL variables: Server={host}:{port}");
-    }
-}
+// Railway: Use DATABASE_URL or ConnectionStrings__DefaultConnection
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Connection string not found. Please set ConnectionStrings__DefaultConnection or MySQL* environment variables.");
+    throw new InvalidOperationException(
+        "❌ Connection string not found!\n" +
+        "Please set environment variable: DATABASE_URL\n" +
+        "Example: Server=mysql.railway.internal;Port=3306;Database=railway;Uid=root;Pwd=yourpassword;"
+    );
 }
+
+Console.WriteLine($"✅ Connection string loaded: {connectionString.Substring(0, Math.Min(40, connectionString.Length))}...");
 
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
 
